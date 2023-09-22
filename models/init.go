@@ -23,3 +23,7 @@ func TNBook() string {
 func TNBookCategory() string {
 	return "md_book_category"
 }
+
+func TNMembers() string {
+	return "md_members"
+}

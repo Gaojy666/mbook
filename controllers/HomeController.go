@@ -19,5 +19,8 @@ func (c *HomeController) Index() {
 		logs.Error(err.Error())
 	}
 	c.TplName = "home/list.html"
+}
 
+func (c *HomeController) Index2() {
+	c.TplName = "home/list.html"
 }

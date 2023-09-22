@@ -6,6 +6,9 @@ import (
 	_ "ziyoubiancheng/mbook/sysinit"
 )
 
+func init() {
+	web.BConfig.WebConfig.Session.SessionOn = true
+}
 func main() {
 	//beego.Run()
 	web.Run()
