@@ -14,6 +14,9 @@ import (
 
 type BaseController struct {
 	web.Controller
+	Member          *models.Member    // 用户
+	Option          map[string]string // 全局设置
+	EnableAnonymous bool              // 开启匿名访问
 }
 
 type CookieRemember struct {
@@ -36,7 +39,7 @@ func (c *BaseController) SetMember(member models.Member) {
 }
 
 // Ajax接口返回Json
-// JsonResult将错误码、错误消息和数据组装成 JSON 格式的响应并返回给客户端
+// 将错误码、错误消息和数据组装成 JSON 格式的响应并返回给客户端
 func (c *BaseController) JsonResult(errCode int, errMsg string, data ...interface{}) {
 	jsonData := make(map[string]interface{}, 3)
 	jsonData["errcode"] = errCode

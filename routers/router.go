@@ -33,9 +33,11 @@ func init() {
 	// 与regist相比，login没有类似doregist的请求，其post请求在AccountController通过判断
 	// 如果是post请求，就执行登录过程；如果是get请求，就展示get页面
 	web.Router("/login", &controllers.AccountController{}, "*:Login")
+	// Register页面
 	web.Router("/regist", &controllers.AccountController{}, "*:Regist")
 	web.Router("/logout", &controllers.AccountController{}, "*:Logout")
-	web.Router("/doregist", &controllers.AccountController{}, "post:Doregist")
+	// 注册时提交的post请求
+	web.Router("/doregist", &controllers.AccountController{}, "post:DoRegist")
 
 	// 用户图书管理
 	web.Router("/book", &controllers.BookController{}, "*:Index")                     // 我的图书

@@ -10,7 +10,7 @@ type DocumentController struct {
 func (c *DocumentController) Index() {
 	token := c.GetString("token")
 	identify := c.Ctx.Input.Param(":key")
-	if identify = "" {
+	if identify == "" {
 		c.Abort("404")
 	}
 	tab := strings.ToLower(c.GetString("tab"))

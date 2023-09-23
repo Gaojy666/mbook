@@ -3,6 +3,8 @@ package models
 import (
 	"errors"
 	"github.com/beego/beego/v2/client/orm"
+	"regexp"
+	"strings"
 	"time"
 	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/utils"
@@ -43,6 +45,55 @@ func (m *Member) Find(id int) (*Member, error) {
 	return m, nil
 }
 
+// 添加注册的用户信息
+func (m *Member) Add() error {
+	if m.Email == "" {
+		return errors.New("请填写邮箱")
+	}
+	if ok, err := regexp.MatchString(common.RegexpEmail, m.Email); !ok || err != nil {
+		return errors.New("邮箱格式错误")
+	}
+	if l := strings.Count(m.Password, ""); l < 6 || l >= 20 {
+		return errors.New("密码请输入6-20个字符")
+	}
+
+	// 只是创建了一个查询对象，尚未指定表
+	cond := orm.NewCondition().Or("email", m.Email).Or("nickname", m.Nickname).Or("account", m.Account)
+	var one Member
+	o := orm.NewOrm()
+
+	if o.QueryTable(m.TableName()).SetCond(cond).One(&one, "member_id", "nickname", "account", "email"); one.MemberId > 0 {
+		// 根据nickname, email, account来查询数据库，有至少一条存在
+		// 下面分别进行判断
+		if one.Nickname == m.Nickname {
+			return errors.New("昵称已存在")
+		}
+		if one.Email == m.Email {
+			return errors.New("邮箱已存在")
+		}
+		if one.Account == m.Account {
+			return errors.New("用户已存在")
+		}
+	}
+
+	// 对密码进行哈希加密
+	hash, err := utils.PasswordHash(m.Password)
+
+	if err != nil {
+		return err
+	}
+
+	m.Password = hash
+	// 将加密密码后的用户信息存储到数据库中
+	_, err = o.Insert(m)
+	if err != nil {
+		return err
+	}
+
+	m.RoleName = common.Role(m.Role)
+	return nil
+}
+
 // 更新用户的相应字段
 func (m *Member) Update(cols ...string) error {
 	if m.Email == "" {
@@ -57,8 +108,8 @@ func (m *Member) Update(cols ...string) error {
 // 当cookie过期时需要登陆
 func (m *Member) Login(account string, password string) (*Member, error) {
 	member := &Member{}
-	// 数据库中有对应的账户，并且为没有登陆状态，才是正常的。
-	// 将结果存储到 member 中。
+	// 数据库中有对应的等级，并且为没有登陆状态，才是正常的。
+	// .one将查询结果存储到 member 中。
 	err := orm.NewOrm().QueryTable(m.TableName()).Filter("account", account).Filter("status", 0).One(member)
 	if err != nil {
 		return member, errors.New("用户不存在")
