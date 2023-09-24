@@ -125,3 +125,10 @@ func (m *Member) Login(account string, password string) (*Member, error) {
 
 	return member, errors.New("密码错误")
 }
+
+func (m *Member) IsAdministrator() bool {
+	if m == nil || m.MemberId <= 0 {
+		return false
+	}
+	return m.Role == 0 || m.Role == 1
+}

@@ -3,6 +3,7 @@ package models
 import "time"
 
 // 拼接返回到接口的图书信息
+// 在Book结构体的基础上，加入了用户与图书之间的关系的信息
 type BookData struct {
 	BookId         int       `json:"book_id"`
 	BookName       string    `json:"book_name"`

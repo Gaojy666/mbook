@@ -43,9 +43,10 @@ func (c *AccountController) Login() {
 	// 采用了sha256来作为加密算法，
 	// 第一个参数secret是加密的密钥，第二个参数key是cookie的名字，返回cookie值
 	if cookie, ok := c.GetSecureCookie(common.AppKey(), "login"); ok {
-		// 如果cookie不能解码到remember结构体中，则有错误
+		// 如果cookie可以解码到remember结构体中
 		if err := utils.Decode(cookie, &remember); err == nil {
 			if err = c.login(remember.MemberId); err == nil {
+				// 重定向页面
 				c.Redirect(web.URLFor("HomeController.Index"), 302)
 				return
 			}
@@ -53,6 +54,7 @@ func (c *AccountController) Login() {
 	}
 	// 如果当前请求是get请求，那么直接展示页面即可
 	c.TplName = "account/login.html"
+
 	// 当前请求是否为Post请求，如果是就执行登录过程
 	if c.Ctx.Input.IsPost() {
 		account := c.GetString("account")
@@ -64,45 +66,21 @@ func (c *AccountController) Login() {
 		}
 		member.LastLoginTime = time.Now()
 		member.Update()
+
+		// 设置两个session
+		c.SetMember(*member)
+
+		remember.MemberId = member.MemberId
+		remember.Account = member.Account
+		remember.Time = time.Now()
 		v, err := utils.Encode(remember)
-		if err != nil {
+		if err == nil {
 			c.SetSecureCookie(common.AppKey(), "login", v, 20*3600*365)
 		}
 		c.JsonResult(0, "ok")
 	}
 
 	c.Data["RandomStr"] = time.Now().Unix()
-}
-
-/*
-* 私有函数
- */
-//封装一个内部调用的函数，login
-// 判断数据库是否有相应的sessionId
-func (c *AccountController) login(memberId int) (err error) {
-	//能否通过该sessionId查询到相应用户
-	member, err := models.NewMember().Find(memberId)
-	if member.MemberId == 0 {
-		errors.New("用户不存在")
-	}
-	// 如果没有数据
-	if err != nil {
-		return err
-	}
-	// 更新登陆时间
-	member.LastLoginTime = time.Now()
-	member.Update()
-	c.SetMember(*member)
-
-	var remember CookieRemember
-	remember.MemberId = member.MemberId
-	remember.Account = member.Account
-	remember.Time = time.Now()
-	v, err := utils.Encode(remember)
-	if err != nil {
-		c.SetSecureCookie(common.AppKey(), "login", v, 20*3600*365)
-	}
-	return err
 }
 
 // 注册页面
@@ -208,4 +186,35 @@ func (c *AccountController) Logout() {
 	c.SetSecureCookie(common.AppKey(), "login", "", -3600)
 	// 重定向到登录页面，302 表示临时重定向。这样，用户在注销后会被重定向到登录页面。
 	c.Redirect(web.URLFor("AccountController.Login"), 302)
+}
+
+/*
+* 私有函数
+ */
+//封装一个内部调用的函数，login
+// 判断数据库是否有相应的memberId
+func (c *AccountController) login(memberId int) (err error) {
+	//能否通过该memberId查询到相应用	户
+	member, err := models.NewMember().Find(memberId)
+	if member.MemberId == 0 {
+		errors.New("用户不存在")
+	}
+	// 如果没有数据
+	if err != nil {
+		return err
+	}
+	// 更新登陆时间
+	member.LastLoginTime = time.Now()
+	member.Update()
+	c.SetMember(*member)
+
+	var remember CookieRemember
+	remember.MemberId = member.MemberId
+	remember.Account = member.Account
+	remember.Time = time.Now()
+	v, err := utils.Encode(remember)
+	if err == nil {
+		c.SetSecureCookie(common.AppKey(), "login", v, 20*3600*365)
+	}
+	return err
 }

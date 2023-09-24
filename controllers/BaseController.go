@@ -10,6 +10,7 @@ import (
 	"time"
 	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/models"
+	"ziyoubiancheng/mbook/utils"
 )
 
 type BaseController struct {
@@ -25,6 +26,40 @@ type CookieRemember struct {
 	Time     time.Time
 }
 
+// 每个子类Controller公用方法调用前，都执行一下Prepare方法
+func (c *BaseController) Prepare() {
+	c.Member = models.NewMember() // 初始化
+	c.EnableAnonymous = false
+	// 从session中获取用户信息
+	if member, ok := c.GetSession(common.SessionName).(models.Member); ok && member.MemberId > 0 {
+		c.Member = &member
+	} else {
+		// 如果Cookie中存在登录信息，从Cookie中获取memberId,然后在数据库中查找对应的用户信息
+		if cookie, ok := c.GetSecureCookie(common.AppKey(), "login"); ok {
+			var remember CookieRemember
+			err := utils.Decode(cookie, &remember)
+			if err == nil {
+				member, err := models.NewMember().Find(remember.MemberId)
+				if err == nil {
+					c.SetMember(*member)
+					c.Member = member
+				}
+			}
+		}
+	}
+
+	if c.Member.RoleName == "" {
+		c.Member.RoleName = common.Role(c.Member.Role)
+	}
+	// 返回前端需要的信息
+	c.Data["Member"] = c.Member
+	c.Data["BaseUrl"] = c.BaseUrl()
+	c.Data["SITE_NAME"] = "MBOOK"
+	// 设置全局配置
+	c.Option = make(map[string]string)
+	c.Option["ENABLED_CAPTCHA"] = "false"
+}
+
 // 设置登录用户信息
 func (c *BaseController) SetMember(member models.Member) {
 	if member.MemberId <= 0 {
@@ -33,6 +68,7 @@ func (c *BaseController) SetMember(member models.Member) {
 		c.DelSession("uid")
 		c.DestroySession()
 	} else {
+		// 如果用户信息存在
 		c.SetSession(common.SessionName, member)
 		c.SetSession("uid", member.MemberId)
 	}
@@ -67,4 +103,24 @@ func (c *BaseController) JsonResult(errCode int, errMsg string, data ...interfac
 	}
 	//调用 StopRun 方法来停止当前请求的执行
 	c.StopRun()
+}
+
+// 应该是返回配置项中设置的另一台主机的地址
+func (c *BaseController) BaseUrl() string {
+	// sitemap_host 什么意思？
+	host, _ := web.AppConfig.String("sitemap_host")
+	if len(host) > 0 {
+		// 检查 host 是否以 "http://" 或 "https://" 开头
+		if strings.HasPrefix(host, "http://") || strings.HasPrefix(host, "https://") {
+			return host
+		}
+		//如果 host 不包含完整的 URL 地址，
+		//使用 c.Ctx.Input.Scheme() 获取请求的协议（HTTP 或 HTTPS），
+		//然后与 host 组合成完整的 URL 地址，并返回。
+		return c.Ctx.Input.Scheme() + "://" + host
+	}
+	//如果没有获取到有效的 "sitemap_host" 配置项的值
+	//使用 c.Ctx.Input.Scheme() 获取请求的协议（HTTP 或 HTTPS），
+	//再加上 c.Ctx.Request.Host 获取当前请求的主机名，组合成完整的 URL 地址
+	return c.Ctx.Input.Scheme() + "://" + c.Ctx.Request.Host
 }

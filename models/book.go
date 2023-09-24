@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"ziyoubiancheng/mbook/utils"
 )
 
 type Book struct {
@@ -24,9 +25,9 @@ type Book struct {
 	CreateTime     time.Time `orm:"type(datetime);auto_now_add" json:"create_time"` //创建时间
 	ModifyTime     time.Time `orm:"type(datetime);auto_now_add" json:"modify_time"`
 	ReleaseTime    time.Time `orm:"type(datetime);" json:"release_time"` //发布时间
-	DocCount       int       `json:"doc_count"`                          //文档数量
-	CommentCount   int       `orm:"type(int)" json:"comment_count"`
-	Vcnt           int       `orm:"default(0)" json:"vcnt"`              //阅读次数
+	DocCount       int       `json:"doc_count"`                          //章节数量
+	CommentCount   int       `orm:"type(int)" json:"comment_count"`      //评论数量
+	Vcnt           int       `orm:"default(0)" json:"vcnt"`              //阅读人次
 	Collection     int       `orm:"column(star);default(0)" json:"star"` //收藏次数
 	Score          int       `orm:"default(40)" json:"score"`            //评分
 	CntScore       int       //评分人数
@@ -75,4 +76,53 @@ func (m *Book) HomeData(pageIndex, pageSize int, cid int, fileds ...string) (boo
 
 	return
 
+}
+
+// Select 根据查询的字段和值来查询相应的数据，后面可以指定查询的字段结果
+func (m *Book) Select(field string, value interface{}, cols ...string) (book *Book, err error) {
+	if len(cols) == 0 {
+		err = orm.NewOrm().QueryTable(m.TableName()).Filter(field, value).One(m)
+	} else {
+		err = orm.NewOrm().QueryTable(m.TableName()).Filter(field, value).One(m, cols...)
+	}
+	return m, err
+}
+
+func (book *Book) ToBookData() (m *BookData) {
+	m = &BookData{
+		BookId:         book.BookId,
+		BookName:       book.BookName,
+		Identify:       book.Identify,
+		OrderIndex:     book.OrderIndex,
+		Description:    strings.Replace(book.Description, "\r\n", "<br/>", -1),
+		PrivatelyOwned: book.PrivatelyOwned,
+		PrivateToken:   book.PrivateToken,
+		DocCount:       book.DocCount,
+		CommentCount:   book.CommentCount,
+		CreateTime:     book.CreateTime,
+		// CreateName
+		ModifyTime: book.ModifyTime,
+		Cover:      book.Cover,
+		MemberId:   book.MemberId,
+		// Username
+		Editor: book.Editor,
+		// RelationshipId
+		// RoleId
+		// RoleName
+		Status:     book.Status,
+		Vcnt:       book.Vcnt,
+		Collection: book.Collection,
+		Score:      book.Score,
+		CntComment: book.CntComment,
+		CntScore:   book.CntScore,
+		ScoreFloat: utils.ScoreFloat(book.Score), //将int型保留一位小数
+		// LastModifyText
+		Author:    book.Author,
+		AuthorURL: book.AuthorURL,
+	}
+
+	if book.Editor == "" {
+		m.Editor = "markdown" // 默认Markdown编辑器
+	}
+	return m
 }
