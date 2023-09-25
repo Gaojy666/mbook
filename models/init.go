@@ -60,6 +60,10 @@ func TNAttachment() string {
 	return "md_attachment"
 }
 
+func TNDocumentStore() string {
+	return "md_document_store"
+}
+
 /*
 * Tool Funcs
 * */

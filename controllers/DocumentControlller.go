@@ -2,11 +2,17 @@ package controllers
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
+	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
+	"html/template"
+	"strconv"
 	"strings"
+	"time"
+	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/models"
 )
 
@@ -57,7 +63,7 @@ func (c *DocumentController) Index() {
 
 // 阅读器页面
 func (c *DocumentController) Read() {
-	// Read需要取两个内容，一个是目录内容，一个是详情内容
+	// Read需要取两个内容，一个是章节目录内容，一个是章节详情内容
 
 	identify := c.Ctx.Input.Param(":key")
 	id := c.GetString(":id")
@@ -73,6 +79,7 @@ func (c *DocumentController) Read() {
 		return
 	}
 
+	// 1.拿到章节详情内容
 	// 如果有权限，拿到本书的相关信息
 	bookData := c.getBookData(identify, token)
 
@@ -162,8 +169,31 @@ func (c *DocumentController) Read() {
 		data.View = doc.Vcnt
 		data.UpdatedAt = doc.ModifyTime.Format("2006-01-02 15:04:05")
 
+		// 1. 返回章节详情内容
 		c.JsonResult(0, "ok", data)
 	}
+
+	// 2. 拿到本书的章节目录，同时选中的当前章节，目录中要有高亮
+	// tree取得返回的由菜单树结构生成的html字符串
+	tree, err := models.NewDocument().GetMenuHtml(bookData.BookId, doc.DocumentId)
+
+	if err != nil {
+		logs.Error(err)
+		c.Abort("404")
+	}
+
+	c.Data["Bookmark"] = false
+	c.Data["Model"] = bookData
+	c.Data["Book"] = bookData
+	c.Data["Result"] = template.HTML(tree) // 返回菜单
+	c.Data["Title"] = doc.DocumentName
+	c.Data["DocId"] = doc.DocumentId
+	c.Data["Content"] = template.HTML(doc.Release)
+	c.Data["View"] = doc.Vcnt
+	c.Data["UpdatedAt"] = doc.ModifyTime.Format("2006-01-02 15:04:05")
+
+	//设置模版
+	c.TplName = "document/default_read.html"
 }
 
 // 获取图书内容并判断权限
@@ -214,4 +244,205 @@ func (c *DocumentController) getBookData(identify, token string) *models.BookDat
 		}
 	}
 	return bookResult
+}
+
+// 读书编辑页面
+// 先展示一个模板，尚未填充内容
+func (c *DocumentController) Edit() {
+	docId := 0 // 文档id
+
+	identify := c.Ctx.Input.Param(":key")
+	if identify == "" {
+		c.Abort("404")
+	}
+
+	bookData := models.NewBookData()
+
+	var err error
+	//现根据用户进行权限验证
+	if c.Member.IsAdministrator() {
+		// 根据"identify"找到对应的book数据
+		book, err := models.NewBook().Select("identify", identify)
+		if err != nil {
+			c.JsonResult(1, "权限错误")
+		}
+		// 将book类型转为BookData类型
+		bookData = book.ToBookData()
+	} else {
+		// 如果不是管理员，再根据书和用户的关系再进行权限认证
+		bookData, err = models.NewBookData().SelectByIdentify(identify, c.Member.MemberId)
+		if err != nil {
+			c.Abort("404")
+		}
+		// 普通用户不能打开该书的编辑页
+		if bookData.RoleId == common.BookGeneral {
+			c.JsonResult(1, "权限错误")
+		}
+	}
+
+	// 渲染模板
+	c.TplName = "document/markdown_edit_template.html"
+
+	c.Data["Model"] = bookData
+	r, _ := json.Marshal(bookData)
+
+	c.Data["ModelResult"] = template.JS(string(r))
+
+	c.Data["Result"] = template.JS("[]")
+
+	// 编辑的文档
+	if id := c.GetString(":id"); id != "" {
+		if num, _ := strconv.Atoi(id); num > 0 {
+			docId = num
+		} else { //字符串 or num <= 0
+			var doc = models.NewDocument()
+			// 查到符合指定identify和book_id的那条document的id
+			orm.NewOrm().QueryTable(doc).Filter("identify", id).Filter("book_id", bookData.BookId).One(doc, "document_id")
+			docId = doc.DocumentId
+		}
+	}
+
+	// 取到章节菜单目录，并且当前选中的章节要高亮
+	trees, err := models.NewDocument().GetMenu(bookData.BookId, docId, true)
+	if err != nil {
+		logs.Error("GetMenu error : ", err)
+	} else {
+		if len(trees) > 0 {
+			if jsTree, err := json.Marshal(trees); err == nil {
+				c.Data["Result"] = template.JS(string(jsTree))
+			}
+		} else {
+			c.Data["Result"] = template.JS("[]")
+		}
+	}
+	c.Data["BaiDuMapKey"] = web.AppConfig.DefaultString("baidumapkey", "")
+}
+
+// 向Edit编辑页面填充内容
+// 如果是Post请求，就保存文档并返回内容
+func (c *DocumentController) Content() {
+	// 获取请求参数
+	identify := c.Ctx.Input.Param(":key")
+	docId, err := c.GetInt("doc_id")
+	errMsg := "ok"
+	// 根据请求参数获取章节Id
+	if err != nil {
+		docId, _ = strconv.Atoi(c.Ctx.Input.Param(":id"))
+	}
+	bookId := 0
+	//权限验证
+	if c.Member.IsAdministrator() {
+		// 如果用户是管理员，则根据标识符获取书籍信息
+		book, err := models.NewBook().Select("identify", identify)
+		if err != nil {
+			c.JsonResult(1, "获取内容错误")
+		}
+		bookId = book.BookId
+	} else {
+		// 如果用户不是管理员，则根据标识符和用户ID获取书籍数据信息
+		bookData, err := models.NewBookData().SelectByIdentify(identify, c.Member.MemberId)
+
+		// 普通用户没有编辑该书权限
+		if err != nil || bookData.RoleId == common.BookGeneral {
+			c.JsonResult(1, "权限错误")
+		}
+		bookId = bookData.BookId
+	}
+
+	// 检查参数是否正确
+	if docId <= 0 {
+		c.JsonResult(1, "参数错误")
+	}
+
+	// documentStore是保存功能中重点操作的对象
+	documentStore := new(models.DocumentStore)
+
+	// 如果不是POST请求，则返回文档内容
+	if !c.Ctx.Input.IsPost() {
+		// 根据docId取到章节所有信息
+		doc, err := models.NewDocument().SelectByDocId(docId)
+
+		if err != nil {
+			c.JsonResult(1, "文档不存在")
+		}
+		attach, err := models.NewAttachment().SelectByDocumentId(doc.DocumentId)
+		if err == nil {
+			doc.AttachList = attach
+		}
+
+		doc.Release = "" //Ajax请求，之间用markdown渲染，不用release
+		doc.Markdown = documentStore.SelectField(doc.DocumentId, "markdown")
+		c.JsonResult(0, errMsg, doc)
+	}
+
+	//更新文档内容
+	markdown := strings.TrimSpace(c.GetString("markdown", ""))
+	content := c.GetString("html")
+
+	version, _ := c.GetInt64("version", 0)
+	isCover := c.GetString("cover")
+
+	doc, err := models.NewDocument().SelectByDocId(docId)
+
+	if err != nil {
+		c.JsonResult(1, "读取文档错误")
+	}
+	if doc.BookId != bookId {
+		c.JsonResult(1, "内部错误")
+	}
+	if doc.Version != version && !strings.EqualFold(isCover, "yes") {
+		c.JsonResult(1, "文档将被覆盖")
+	}
+
+	isSummary := false
+	isAuto := false
+
+	if markdown == "" && content != "" {
+		documentStore.Markdown = content
+	} else {
+		documentStore.Markdown = markdown
+	}
+	documentStore.Content = content
+	doc.Version = time.Now().Unix()
+
+	// 插入或更新文档
+	if docId, err := doc.InsertOrUpdate(); err != nil {
+		c.JsonResult(1, "保存失败")
+	} else {
+		documentStore.DocumentId = int(docId)
+		if err := documentStore.InsertOrUpdate("markdown", "content"); err != nil {
+			logs.Error(err)
+		}
+	}
+
+	if isAuto {
+		errMsg = "auto"
+	} else if isSummary {
+		errMsg = "true"
+	}
+
+	doc.Release = ""
+	c.JsonResult(0, errMsg, doc)
+}
+
+// 阅读页内搜索
+func (c *DocumentController) Search() {
+	identify := c.Ctx.Input.Param(":key")
+	token := c.GetString("token")
+	keyword := strings.TrimSpace(c.GetString("keyword"))
+
+	if identify == "" {
+		c.JsonResult(1, "参数错误")
+	}
+	if !c.EnableAnonymous && c.Member == nil {
+		c.Redirect(web.URLFor("AccountController.Login"), 302)
+		return
+	}
+	bookData := c.getBookData(identify, token)
+	docs, _, err := models.NewDocumentSearch().SearchDocument(keyword, bookData.BookId, 1, 10000)
+	if err != nil {
+		beego.Error(err)
+		c.JsonResult(1, "搜索结果错误")
+	}
+	c.JsonResult(0, keyword, docs)
 }

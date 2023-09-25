@@ -27,6 +27,8 @@ type Member struct {
 	LastLoginTime time.Time `orm:"type(datetime);null" json:"last_login_time"`
 }
 
+// 在这里获得与member结构体有关的表名,因此在本文件下
+// 对该表进行查询时，不再需要指定表名
 func (m *Member) TableName() string {
 	return TNMembers()
 }
@@ -35,7 +37,7 @@ func NewMember() *Member {
 	return &Member{}
 }
 
-// 验证当前sessionId是否有效，即能否通过该sessionId查询到相应用户
+// 验证当前memberId是否有效，即能否通过该memberId查询到相应用户
 func (m *Member) Find(id int) (*Member, error) {
 	m.MemberId = id
 	if err := orm.NewOrm().Read(m); err != nil {

@@ -4,9 +4,9 @@ import "github.com/beego/beego/v2/client/orm"
 
 type Relationship struct {
 	RelationshipId int `orm:"pk;auto;" json:"relationship_id"` // 主键，自增
-	MemberId       int `json:"member_id"`
-	BookId         int `json:"book_id"`
-	RoleId         int `json:"role_id"` // common.BookRole
+	MemberId       int `json:"member_id"`                      // 用户Id
+	BookId         int `json:"book_id"`                        // 书Id
+	RoleId         int `json:"role_id"`                        // common.BookRole,记录对该书的权限
 }
 
 func (m *Relationship) TableName() string {
