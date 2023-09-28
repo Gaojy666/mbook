@@ -71,6 +71,7 @@ func RegisterDatabase(alias string) {
 	// 数据库端口
 	dbPost, _ := web.AppConfig.String("db_" + alias + "_port")
 
+	//ORM 必须注册一个别名为 default 的数据库，作为默认使用
 	// root:lu741208@tcp(127.0.0.1:3306)/mbook?charset=utf8mb4
 	orm.RegisterDataBase(dbAlias, "mysql",
 		dbuser+":"+dbPwd+"@tcp("+dbHost+":"+dbPost+")/"+

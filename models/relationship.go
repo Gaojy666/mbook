@@ -29,3 +29,8 @@ func (m *Relationship) SelectRoleId(bookId, memberId int) (int, error) {
 	}
 	return m.RoleId, nil
 }
+
+func (m *Relationship) Insert() error {
+	_, err := orm.NewOrm().Insert(m)
+	return err
+}

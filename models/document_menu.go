@@ -40,6 +40,7 @@ func (m *Document) GetMenuHtml(bookId, selectedId int) (string, error) {
 	buf := bytes.NewBufferString("")
 
 	//根据菜单树结构生成 HTML 字符串，并将结果写入到 buf 中。
+	// parent一开始传0,是因为书的第一章,肯定没有父节点
 	m.treeHTML(trees, 0, selectedId, parentId, buf)
 
 	return buf.String(), nil
@@ -103,7 +104,7 @@ func (m *Document) GetMenu(bookId int, selectedId int, isEdit ...bool) ([]*Docum
 			idf = strconv.Itoa(item.DocumentId)
 		}
 
-		// 如果被选中
+		// 如果要编辑该章
 		if len(isEdit) > 0 && isEdit[0] == true {
 			// DocumentName字段在前端显示时会展示不同的颜色
 			tree.DocumentName = item.DocumentName + "<small class='text-danger'>(" + idf + ")</small>"

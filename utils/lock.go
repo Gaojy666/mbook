@@ -4,13 +4,13 @@ import "sync"
 
 var BooksRelease = BooksLock{Books: make(map[int]bool)}
 
-//书籍发布锁
+// 书籍发布锁
 type BooksLock struct {
 	Books map[int]bool
 	Lock  sync.RWMutex
 }
 
-//查询发布任务
+// 查询发布任务
 func (this BooksLock) Exist(bookId int) (exist bool) {
 	this.Lock.RLock()
 	defer this.Lock.RUnlock()
@@ -18,16 +18,17 @@ func (this BooksLock) Exist(bookId int) (exist bool) {
 	return
 }
 
-//设置
+// 设置
 func (this BooksLock) Set(bookId int) {
 	this.Lock.RLock()
 	defer this.Lock.RUnlock()
 	this.Books[bookId] = true
 }
 
-//删除
+// 删除
 func (this BooksLock) Delete(bookId int) {
 	this.Lock.RLock()
 	defer this.Lock.RUnlock()
+	// delete删除指定的 bookId 键值对
 	delete(this.Books, bookId)
 }

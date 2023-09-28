@@ -3,6 +3,9 @@ package models
 import (
 	"fmt"
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/core/logs"
+	_ "github.com/go-sql-driver/mysql"
+	// 先调用models层中的init函数，创建表
 )
 
 func init() {
@@ -48,8 +51,8 @@ func TNDocuments() string {
 	return "md_documents"
 }
 
-func TNComments() string {
-	return "md_comments"
+func TNComments(bookid int) string {
+	return fmt.Sprintf("md_comments_%04d", bookid%2)
 }
 
 func TNScore() string {
@@ -62,6 +65,10 @@ func TNAttachment() string {
 
 func TNDocumentStore() string {
 	return "md_document_store"
+}
+
+func TNCollection() string {
+	return "md_star"
 }
 
 /*
@@ -87,4 +94,25 @@ func IncOrDec(table string, field string, condition string, incre bool, step ...
 	sql := fmt.Sprintf("update %v set %v=%v%v%v where %v", table, field, field, mark, s, condition)
 	_, err = orm.NewOrm().Raw(sql).Exec()
 	return
+}
+
+/*
+* Tool Funcs
+* */
+//获取orm对象
+//@param alias 数据库alias 默认是主库,可以指定从库alias
+func GetOrm(alias string) orm.Ormer {
+	o := orm.NewOrm()
+	if len(alias) > 0 {
+		logs.Debug("Using Alias : " + alias)
+		// 如果是写
+		if "w" == alias {
+			// 选择default数据库
+			o = orm.NewOrmUsingDB("default")
+		} else {
+			// 如果是从库,选择alias数据库
+			o = orm.NewOrmUsingDB(alias)
+		}
+	}
+	return o
 }

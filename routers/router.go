@@ -19,15 +19,15 @@ func init() {
 	web.Router("/read/:key/search", &controllers.DocumentController{}, "post:Search") // 图书章节内容搜索
 
 	// 图书编辑模块
-	web.Router("/api/:key/content/?:id", &controllers.DocumentController{}, "*:Content") // 保存文档内容
 	web.Router("/api/:key/edit/?:id", &controllers.DocumentController{}, "*:Edit")       // 文档编辑
+	web.Router("/api/:key/content/?:id", &controllers.DocumentController{}, "*:Content") // 保存文档内容
 	web.Router("/api/upload", &controllers.DocumentController{}, "post:Upload")          // 上传图片
 	web.Router("/api/:key/create", &controllers.DocumentController{}, "post:Create")     // 创建章节
 	web.Router("/api/:key/delete", &controllers.DocumentController{}, "post:Delete")     // 删除章节
 
 	// 搜索  ******
-	web.Router("/search", &controllers.SearchController{}, "get:Search")
-	web.Router("/search/result", &controllers.SearchController{}, "get:Result")
+	//web.Router("/search", &controllers.SearchController{}, "get:Search")
+	//web.Router("/search/result", &controllers.SearchController{}, "get:Result")
 
 	// login
 	// 与regist相比，login没有类似doregist的请求，其post请求在AccountController通过判断
@@ -39,15 +39,15 @@ func init() {
 	// 注册时提交的post请求
 	web.Router("/doregist", &controllers.AccountController{}, "post:DoRegist")
 
-	// 用户图书管理
-	web.Router("/book", &controllers.BookController{}, "*:Index")                     // 我的图书
-	web.Router("/book/create", &controllers.BookController{}, "post:Create")          // 创建图书
-	web.Router("/book/:key/setting", &controllers.BookController{}, "*：Setting")      // 图书设置
-	web.Router("/book/setting/upload", &controllers.BookController{}, "post:Upload")  // 上传图书封面
-	web.Router("/book/star/:id", &controllers.BookController{}, "*:Collection")       // 收藏图书
-	web.Router("/book/setting/save", &controllers.BookController{}, "post:SaveBook")  // 保存
-	web.Router("/book/:key/release", &controllers.BookController{}, "post:Release")   // 发布
-	web.Router("/book/:key/token", &controllers.BookController{}, "post:CreateToken") // 发布
+	//用户图书管理
+	web.Router("/book", &controllers.BookController{}, "*:Index")                         //我的图书
+	web.Router("/book/create", &controllers.BookController{}, "post:Create")              //创建图书
+	web.Router("/book/:key/setting", &controllers.BookController{}, "*:Setting")          //图书设置
+	web.Router("/book/setting/upload", &controllers.BookController{}, "post:UploadCover") //图书封面
+	web.Router("/book/star/:id", &controllers.BookController{}, "*:Collection")           //收藏图书
+	web.Router("/book/setting/save", &controllers.BookController{}, "post:SaveBook")      //保存
+	web.Router("/book/:key/release", &controllers.BookController{}, "post:Release")       //发布
+	web.Router("/book/setting/token", &controllers.BookController{}, "post:CreateToken")  //创建Token
 
 	// 个人中心  ******
 	web.Router("/user/:username", &controllers.UserController{}, "get:Index")            // 分享

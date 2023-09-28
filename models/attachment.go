@@ -37,6 +37,16 @@ func NewAttachment() *Attachment {
 	return &Attachment{}
 }
 
+func (m *Attachment) Insert() error {
+	_, err := orm.NewOrm().Insert(m)
+	return err
+}
+
+func (m *Attachment) Update() error {
+	_, err := orm.NewOrm().Update(m)
+	return err
+}
+
 // 根据章节id去取对应的附件
 func (m *Attachment) SelectByDocumentId(docId int) (attaches []*Attachment, err error) {
 	// 查询的结果按照降序排序

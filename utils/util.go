@@ -31,18 +31,26 @@ func ScoreFloat(score int) string {
 // 操作图片显示
 // 如果用的是oss存储，这style是avatar、cover可选项
 func ShowImg(img string, style ...string) (url string) {
+	//路径以 "https://" 或 "http://" 开头，则直接返回该图片路径，表示图片已经是完整的 URL。
 	if strings.HasPrefix(img, "https://") || strings.HasPrefix(img, "http://") {
 		return img
 	}
+	//路径不是以 "https://" 或 "http://" 开头，则认为图片存储在本地文件系统中，需要进行处理
 	img = "/" + strings.TrimLeft(img, "./")
 	switch StoreType {
+	//图片存储在 OSS（对象存储服务）中。
 	case StoreOss:
 		s := ""
+		//如果函数调用时提供了 style 参数，表示需要对图片进行样式处理，例如 "avatar" 或 "cover"
 		if len(style) > 0 && strings.TrimSpace(style[0]) != "" {
 			s = "/" + style[0]
 		}
+		//从应用配置中获取 OSS 的域名配置，并将其赋值给 url 变量
 		url, _ = web.AppConfig.String("oss::Domain")
+		//去除 url 变量末尾的斜杠 "/" 和空格。
+		//将图片路径、样式参数和 url 拼接起来，形成完整的图片 URL
 		url = strings.TrimRight(url, "/ ") + img + s
+	//图片存储在本地文件系统中。
 	case StoreLocal:
 		url = img
 	}

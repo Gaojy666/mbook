@@ -45,7 +45,7 @@ func NewBookData() *BookData {
 	return &BookData{}
 }
 
-// SelectByIdentify 根据标识符和成员ID查询书籍数据信息
+// SelectByIdentify 根据标识符和成员Id得到BookData数据
 func (m *BookData) SelectByIdentify(identify string, memberId int) (result *BookData, err error) {
 	if identify == "" || memberId <= 0 {
 		return result, errors.New("Invalid parameter")

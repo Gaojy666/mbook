@@ -34,6 +34,7 @@ func (c *BaseController) Prepare() {
 	if member, ok := c.GetSession(common.SessionName).(models.Member); ok && member.MemberId > 0 {
 		c.Member = &member
 	} else {
+		// 如果Session中没有检测到
 		// 如果Cookie中存在登录信息，从Cookie中获取memberId,然后在数据库中查找对应的用户信息
 		if cookie, ok := c.GetSecureCookie(common.AppKey(), "login"); ok {
 			var remember CookieRemember
@@ -123,4 +124,20 @@ func (c *BaseController) BaseUrl() string {
 	//使用 c.Ctx.Input.Scheme() 获取请求的协议（HTTP 或 HTTPS），
 	//再加上 c.Ctx.Request.Host 获取当前请求的主机名，组合成完整的 URL 地址
 	return c.Ctx.Input.Scheme() + "://" + c.Ctx.Request.Host
+}
+
+// 关注或取消关注
+func (c *BaseController) SetFollow() {
+	if c.Member.MemberId == 0 {
+		c.JsonResult(1, "请先登录")
+	}
+	uid, _ := c.GetInt(":uid")
+	if uid == c.Member.MemberId {
+		c.JsonResult(1, "不能关注自己")
+	}
+	cancel, _ := new(models.Fans).FollowOrCancel(uid, c.Member.MemberId)
+	if cancel {
+		c.JsonResult(0, "已成功取消关注")
+	}
+	c.JsonResult(0, "已成功关注")
 }
