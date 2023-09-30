@@ -195,6 +195,36 @@ func (m *Book) SearchBook(wd string, page, size int) (books []Book, cnt int, err
 	return
 }
 
+// 根据传入的ids的顺序来返回books切片
+func (m *Book) GetBooksByIds(ids []int, fields ...string) (books []Book, err error) {
+	if len(ids) == 0 {
+		return
+	}
+	var bs []Book
+	var idArr []interface{}
+
+	for _, i := range ids {
+		idArr = append(idArr, i)
+	}
+
+	rows, err := orm.NewOrm().QueryTable(TNBook()).Filter("book_id__in", idArr).All(&bs, fields...)
+	if rows > 0 {
+		// 已经拿到了books数据切片,但是此时默认是根据id进行升序返回的结果
+		// 还是要根据上面SearchBook后id排序的结果来返回books切片结果,也就是根据ids的顺序来返回books数据
+		// 这里所做的就是重新根据ids进行排序
+		bookMap := make(map[interface{}]Book)
+		for _, book := range bs {
+			bookMap[book.BookId] = book
+		}
+		for _, i := range ids {
+			if book, ok := bookMap[i]; ok {
+				books = append(books, book)
+			}
+		}
+	}
+	return
+}
+
 // Insert
 func (m *Book) Insert() (err error) {
 	if _, err = orm.NewOrm().Insert(m); err != nil {

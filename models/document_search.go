@@ -2,9 +2,11 @@ package models
 
 import (
 	"fmt"
+	"github.com/beego/beego/v2/client/orm"
 	"strconv"
 	"strings"
 	"time"
+	"ziyoubiancheng/mbook/utils/html2text"
 )
 
 // 文档搜索结果
@@ -89,5 +91,49 @@ func (m *DocumentSearch) SearchDocument(keyword string, bookId int, page, size i
 	if cnt > 0 {
 		_, err = o.Raw(sql+limit, like, like).QueryRows(&docs)
 	}
+	return
+}
+
+// 返回文档
+func (m *DocumentSearch) GetDocsById(id []int, withoutCont ...bool) (docs []DocumentData, err error) {
+	if len(id) == 0 {
+		return
+	}
+
+	var idArr []string
+	for _, i := range id {
+		idArr = append(idArr, fmt.Sprint(i))
+	}
+
+	fields := []string{
+		"d.document_id", "d.document_name", "d.identify", "d.vcnt", "d.create_time", "b.book_id",
+	}
+
+	// 不返回内容
+	if len(withoutCont) == 0 || !withoutCont[0] {
+		fields = append(fields, "b.identify book_identify", "d.release", "b.book_name")
+	}
+
+	sqlFmt := "select " + strings.Join(fields, ",") + " from " + TNDocuments() + " d left join md_books b on d.book_id=b.book_id where d.document_id in(%v)"
+	sql := fmt.Sprintf(sqlFmt, strings.Join(idArr, ","))
+
+	var rows []DocumentData
+	var cnt int64
+
+	cnt, err = orm.NewOrm().Raw(sql).QueryRows(&rows)
+	if cnt > 0 {
+		docMap := make(map[int]DocumentData)
+		for _, row := range rows {
+			docMap[row.DocumentId] = row
+		}
+
+		for _, i := range id {
+			if doc, ok := docMap[i]; ok {
+				doc.Release = html2text.Html2Text(doc.Release)
+				docs = append(docs, doc)
+			}
+		}
+	}
+
 	return
 }

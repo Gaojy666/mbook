@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/core/logs"
 	"regexp"
 	"strings"
 	"time"
@@ -133,4 +134,27 @@ func (m *Member) IsAdministrator() bool {
 		return false
 	}
 	return m.Role == 0 || m.Role == 1
+}
+
+// 获取用户名
+func (m *Member) GetUsernameByUid(id interface{}) string {
+	var user Member
+	orm.NewOrm().QueryTable(TNMembers()).Filter("member_id", id).One(&user, "account")
+	return user.Account
+}
+
+// 获取昵称
+func (m *Member) GetNicknameByUid(id interface{}) string {
+	var user Member
+	if err := orm.NewOrm().QueryTable(TNMembers()).Filter("member_id", id).One(&user, "nickname"); err != nil {
+		logs.Error(err.Error())
+	}
+
+	return user.Nickname
+}
+
+// 根据用户名获取用户信息
+func (m *Member) GetByUsername(username string) (member Member, err error) {
+	err = orm.NewOrm().QueryTable(TNMembers()).Filter("account", username).One(&member)
+	return
 }

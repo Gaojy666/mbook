@@ -4,6 +4,8 @@ import (
 	"github.com/beego/beego/v2/server/web"
 	"path/filepath"
 	"strings"
+	"ziyoubiancheng/mbook/models"
+	"ziyoubiancheng/mbook/utils"
 )
 
 // 系统初始化，做一些静态路径和必要变量的设置
@@ -50,5 +52,20 @@ func registerFunctions() {
 		}
 		return cdn + p
 	})
+
+	web.AddFuncMap("getUsernameByUid", func(id interface{}) string {
+		return new(models.Member).GetUsernameByUid(id)
+	})
+	web.AddFuncMap("getNicknameByUid", func(id interface{}) string {
+		return new(models.Member).GetNicknameByUid(id)
+	})
+	web.AddFuncMap("inMap", utils.InMap)
+
+	//	//用户是否收藏了文档
+	web.AddFuncMap("doesCollection", new(models.Collection).DoesCollection)
+	//	beego.AddFuncMap("scoreFloat", utils.ScoreFloat)
+	web.AddFuncMap("showImg", utils.ShowImg)
+	web.AddFuncMap("IsFollow", new(models.Fans).Relation)
+	web.AddFuncMap("isubstr", utils.Substr)
 
 }

@@ -7,7 +7,8 @@ import (
 
 func init() {
 	//web.Router("/", &controllers.MainController{})
-	// 首页&分类
+
+	// 首页&分类 *********，一般开发中遇到的就是首页的并发压力比较大
 	// 通过get方法请求到controller中的Index方法里面
 	web.Router("/", &controllers.HomeController{}, "get:Index")
 	web.Router("/2", &controllers.HomeController{}, "get:Index2")
@@ -25,9 +26,9 @@ func init() {
 	web.Router("/api/:key/create", &controllers.DocumentController{}, "post:Create")     // 创建章节
 	web.Router("/api/:key/delete", &controllers.DocumentController{}, "post:Delete")     // 删除章节
 
-	// 搜索  ******
-	//web.Router("/search", &controllers.SearchController{}, "get:Search")
-	//web.Router("/search/result", &controllers.SearchController{}, "get:Result")
+	// 搜索  ****** 随着用户量和数据越来越多，搜索会给服务器带来很大的压力
+	web.Router("/search", &controllers.SearchController{}, "get:Search")
+	web.Router("/search/result", &controllers.SearchController{}, "get:Result")
 
 	// login
 	// 与regist相比，login没有类似doregist的请求，其post请求在AccountController通过判断
@@ -49,14 +50,14 @@ func init() {
 	web.Router("/book/:key/release", &controllers.BookController{}, "post:Release")       //发布
 	web.Router("/book/setting/token", &controllers.BookController{}, "post:CreateToken")  //创建Token
 
-	// 个人中心  ******
-	web.Router("/user/:username", &controllers.UserController{}, "get:Index")            // 分享
-	web.Router("/user/:username/collection", &controllers.UserController{}, "get:Index") // 收藏
-	web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow")    // 关注
-	web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans")        // 粉丝
-	web.Router("/follow/:uid", &controllers.BaseController{}, "get:SetFollow")           // 关注或取消关注
-	web.Router("/book/score/:id", &controllers.BookController{}, "*:Score")              // 评分
-	web.Router("/book/comment/:id", &controllers.BookController{}, "post:Comment")       // 评论
+	// 个人中心,社交模块  ******
+	web.Router("/user/:username", &controllers.UserController{}, "get:Index")                 // 分享
+	web.Router("/user/:username/collection", &controllers.UserController{}, "get:Collection") // 收藏
+	web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow")         // 关注
+	web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans")             // 粉丝
+	web.Router("/follow/:uid", &controllers.BaseController{}, "get:SetFollow")                // 关注或取消关注
+	web.Router("/book/score/:id", &controllers.BookController{}, "*:Score")                   // 评分
+	web.Router("/book/comment/:id", &controllers.BookController{}, "post:Comment")            // 评论
 
 	// 个人设置
 	// /setting中，如果是get请求，展示一个setting页面；如果是post请求，会把建好的信息给入库

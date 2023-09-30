@@ -8,7 +8,7 @@ import (
 
 type Category struct {
 	Id     int
-	Pid    int    // 父ID
+	Pid    int    // 父ID,pid=0时为一级分类，二级分类和一级分类的关系为多对一，因此形成自连表
 	Title  string `orm:"size(30);unique"`
 	Intro  string // 介绍
 	Icon   string // 回调路径？

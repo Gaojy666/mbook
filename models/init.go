@@ -51,8 +51,11 @@ func TNDocuments() string {
 	return "md_documents"
 }
 
-func TNComments(bookid int) string {
-	return fmt.Sprintf("md_comments_%04d", bookid%2)
+//	func TNComments(bookid int) string {
+//		return fmt.Sprintf("md_comments_%04d", bookid%2)
+//	}
+func TNComments() string {
+	return "md_comments"
 }
 
 func TNScore() string {
@@ -69,6 +72,10 @@ func TNDocumentStore() string {
 
 func TNCollection() string {
 	return "md_star"
+}
+
+func TNFans() string {
+	return "md_fans"
 }
 
 /*

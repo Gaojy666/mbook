@@ -31,6 +31,24 @@ type Document struct {
 	Markdown     string        `orm:"-" json:"markdown"`                                                            //存储章节的 Markdown 格式内容。数据表中没有该字段
 }
 
+// 多字段唯一键
+// 定义一组唯一组合索引
+// beego框架会自动检查是否有TableUnique函数和TableIndex函数
+// 自动为我们添加索引
+func (m *Document) TableUnique() [][]string {
+	return [][]string{
+		[]string{"BookId", "Identify"},
+	}
+}
+
+// 多字段索引
+// 定义一组普通组合索引
+func (m *Document) TableIndex() [][]string {
+	return [][]string{
+		[]string{"BookId", "ParentId", "OrderSort"},
+	}
+}
+
 func (m *Document) TableName() string {
 	return TNDocuments()
 }

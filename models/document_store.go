@@ -22,7 +22,7 @@ func (m *DocumentStore) SelectField(docId interface{}, field string) string {
 		field = "content"
 	}
 	// 根据docId查询doc信息,可以选择field字段
-	orm.NewOrm().QueryTable(TNDocuments()).Filter("document_id", docId).One(&ds, field)
+	orm.NewOrm().QueryTable(TNDocumentStore()).Filter("document_id", docId).One(&ds, field)
 	if field == "content" {
 		return ds.Content
 	}

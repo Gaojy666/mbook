@@ -52,7 +52,7 @@ func RegisterDatabase(alias string) {
 	// 如果为主库
 	// 为了程序的健壮性，防止别人将alias认为是dbAlias的作用
 	// 因此要做一个兼容
-	if alias == "w" || "default" == alias || len(alias) <= 0 {
+	if alias == "w" || alias == "default" || len(alias) <= 0 {
 		// dbAlias是建立数据库连接时传进连接函数的参数
 		dbAlias = "default"
 		// 拼接连接字符串的参数

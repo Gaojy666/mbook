@@ -7,9 +7,10 @@ import (
 )
 
 func init() {
-	web.BConfig.WebConfig.Session.SessionOn = true
 }
 func main() {
 	//beego.Run()
+	web.BConfig.WebConfig.Session.SessionOn = true
+
 	web.Run()
 }

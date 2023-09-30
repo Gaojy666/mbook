@@ -57,3 +57,27 @@ func (m *Collection) Collection(uid, bid int) (cancel bool, err error) {
 	}
 	return
 }
+
+// 是否收藏了文档
+func (m *Collection) DoesCollection(uid, bid interface{}) bool {
+	var star Collection
+	star.MemberId, _ = strconv.Atoi(fmt.Sprintf("%v", uid))
+	star.BookId, _ = strconv.Atoi(fmt.Sprintf("%v", bid))
+	orm.NewOrm().Read(&star, "MemberId", "BookId")
+	if star.Id > 0 {
+		return true
+	}
+	return false
+}
+
+// 获取收藏列表，查询图书信息
+func (m *Collection) List(mid, p, listRows int) (cnt int64, books []CollectionData, err error) {
+	o := orm.NewOrm()
+	filter := o.QueryTable(TNCollection()).Filter("member_id", mid)
+	if cnt, _ = filter.Count(); cnt > 0 {
+		sql := "select b.*,m.nickname from " + TNBook() + " b left join " + TNCollection() + " s on s.book_id=b.book_id left join " + TNMembers() + " m on m.member_id=b.member_id where s.member_id=? order by id desc limit %v offset %v"
+		sql = fmt.Sprintf(sql, listRows, (p-1)*listRows)
+		_, err = o.Raw(sql, mid).QueryRows(&books)
+	}
+	return
+}
