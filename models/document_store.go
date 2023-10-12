@@ -1,7 +1,5 @@
 package models
 
-import "github.com/beego/beego/v2/client/orm"
-
 // 文档编辑
 // 当整本书发布之后,再同步到documents表中
 type DocumentStore struct {
@@ -22,7 +20,7 @@ func (m *DocumentStore) SelectField(docId interface{}, field string) string {
 		field = "content"
 	}
 	// 根据docId查询doc信息,可以选择field字段
-	orm.NewOrm().QueryTable(TNDocumentStore()).Filter("document_id", docId).One(&ds, field)
+	GetOrm("r").QueryTable(TNDocumentStore()).Filter("document_id", docId).One(&ds, field)
 	if field == "content" {
 		return ds.Content
 	}
@@ -31,7 +29,7 @@ func (m *DocumentStore) SelectField(docId interface{}, field string) string {
 
 // 插入或者更新
 func (m *DocumentStore) InsertOrUpdate(fields ...string) (err error) {
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	var one DocumentStore
 	o.QueryTable(TNDocumentStore()).Filter("document_id", m.DocumentId).One(&one, "document_id")
 
@@ -46,6 +44,6 @@ func (m *DocumentStore) InsertOrUpdate(fields ...string) (err error) {
 // 删除记录
 func (m *DocumentStore) Delete(docId ...interface{}) {
 	if len(docId) > 0 {
-		orm.NewOrm().QueryTable(TNDocumentStore()).Filter("document_id__in", docId...).Delete()
+		GetOrm("w").QueryTable(TNDocumentStore()).Filter("document_id__in", docId...).Delete()
 	}
 }

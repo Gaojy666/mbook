@@ -23,7 +23,7 @@ func (m *Category) TableName() string {
 
 // 获取所有分类
 func (m *Category) GetCates(pid int, status int) (cates []Category, err error) {
-	qs := orm.NewOrm().QueryTable(TNCategory())
+	qs := GetOrm("r").QueryTable(TNCategory())
 	// 如果想得到全部的分类，那么pid传进来是-1
 	if pid > -1 {
 		qs = qs.Filter("pid", pid)
@@ -42,13 +42,13 @@ func (m *Category) GetCates(pid int, status int) (cates []Category, err error) {
 // 通过Category_id,来获得分类信息
 func (m *Category) Find(cid int) (cate Category) {
 	cate.Id = cid
-	orm.NewOrm().Read(&cate)
+	GetOrm("r").Read(&cate)
 	return cate
 }
 
 // 更新分类字段
 func (m *Category) UpdateField(id int, field, val string) (err error) {
-	_, err = orm.NewOrm().QueryTable(TNCategory()).Filter("id", id).Update(orm.Params{field: val})
+	_, err = GetOrm("w").QueryTable(TNCategory()).Filter("id", id).Update(orm.Params{field: val})
 	return
 }
 
@@ -73,7 +73,7 @@ func CountCategory() {
 
 	var count []Count
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	//查询分类的计数结果
 	sql := "select count(bc.id) cnt, bc.category_id from " + TNBookCategory() + " bc left join " + TNBook() + " b on b.book_id=bc.book_id where b.privately_owned=0 group by bc.category_id"
 	o.Raw(sql).QueryRows(&count)
@@ -123,7 +123,7 @@ func CountCategory() {
 func (m *Category) Delete(id int) (err error) {
 	var cate = Category{Id: id}
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	if err = o.Read(&cate); cate.Cnt > 0 { //当前分类下文档图书数量不为0，不允许删除
 		return errors.New("删除失败，当前分类下的问下图书不为0，不允许删除")
 	}
@@ -148,7 +148,7 @@ func (m *Category) InsertMulti(pid int, cates string) (err error) {
 		return
 	}
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	for _, item := range slice {
 		if item = strings.TrimSpace(item); item != "" {
 			var cate = Category{

@@ -65,7 +65,7 @@ func (m *Document) SelectByDocId(id int) (doc *Document, err error) {
 		return m, errors.New("invalid parameter")
 	}
 
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	err = o.QueryTable(m.TableName()).Filter("document_id", id).One(m)
 	if err == orm.ErrNoRows {
 		return m, errors.New("数据不存在")
@@ -86,7 +86,7 @@ func (m *Document) SelectByIdentify(BookId, Identify interface{}) (*Document, er
 // 获取图书目录
 func (m *Document) GetMenuTop(bookId int) (docs []*Document, err error) {
 	var docsAll []*Document
-	o := orm.NewOrm()
+	o := GetOrm("r")
 
 	// 指定要查询的字段
 	cols := []string{"document_id", "document_name", "member_id", "parent_id", "book_id", "identify"}
@@ -110,7 +110,7 @@ func (m *Document) GetMenuTop(bookId int) (docs []*Document, err error) {
 
 // 插入和更新文档
 func (m *Document) InsertOrUpdate(cols ...string) (id int64, err error) {
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	id = int64(m.DocumentId)
 	m.ModifyTime = time.Now()
 	//去除 m.DocumentName 字段的前后空格。
@@ -148,7 +148,7 @@ func (m *Document) ReleaseContent(bookId int, baseUrl string) {
 	// 函数执行完毕后自动将 bookId 从正在发布的标记集合中删除。
 	defer utils.BooksRelease.Delete(bookId)
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	var book Book
 	querySeter := o.QueryTable(TNBook()).Filter("book_id", bookId)
 	querySeter.One(&book)
@@ -192,7 +192,7 @@ func (m *Document) ReleaseContent(bookId int, baseUrl string) {
 // 删除文档及其子文档
 func (m *Document) Delete(docId int) error {
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	modelStore := new(DocumentStore)
 
 	if doc, err := m.SelectByDocId(docId); err == nil {

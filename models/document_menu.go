@@ -2,7 +2,6 @@ package models
 
 import (
 	"bytes"
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/server/web"
 	"html/template"
 	"strconv"
@@ -54,7 +53,7 @@ func (m *Document) GetMenu(bookId int, selectedId int, isEdit ...bool) ([]*Docum
 
 	// 查询与该书有关的章节数，并按照order_sort和identify排列
 	// 并将查询结果的某些字段放入docs中
-	count, err := orm.NewOrm().QueryTable(m).Filter("book_id", bookId).OrderBy("order_sort", "identify").Limit(2000).All(&docs, "document_id", "document_name", "parent_id", "identify", "version")
+	count, err := GetOrm("r").QueryTable(m).Filter("book_id", bookId).OrderBy("order_sort", "identify").Limit(2000).All(&docs, "document_id", "document_name", "parent_id", "identify", "version")
 	if err != nil {
 		return trees, err
 	}

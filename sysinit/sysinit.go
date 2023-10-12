@@ -6,6 +6,7 @@ import (
 	"strings"
 	"ziyoubiancheng/mbook/models"
 	"ziyoubiancheng/mbook/utils"
+	"ziyoubiancheng/mbook/utils/pagecache"
 )
 
 // 系统初始化，做一些静态路径和必要变量的设置
@@ -18,6 +19,14 @@ func sysinit() {
 	// 注册前端使用函数
 	registerFunctions()
 
+	// 初始化pagecache
+	initPageCache()
+}
+
+func initPageCache() {
+	pagecache.BasePath = "./cache/staticpage"
+	pagecache.ExpireSec = 10
+	pagecache.InitCache()
 }
 
 // 由于view层调用一些后端的函数

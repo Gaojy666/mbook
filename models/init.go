@@ -21,7 +21,7 @@ func init() {
 		new(Collection),
 		new(Relationship),
 		new(Fans),
-		new(Comments),
+		//new(Comments),
 		new(Score),
 	)
 }
@@ -33,7 +33,7 @@ func TNCategory() string {
 }
 
 func TNBook() string {
-	return "md_book"
+	return "md_books"
 }
 func TNBookCategory() string {
 	return "md_book_category"
@@ -51,12 +51,13 @@ func TNDocuments() string {
 	return "md_documents"
 }
 
-//	func TNComments(bookid int) string {
-//		return fmt.Sprintf("md_comments_%04d", bookid%2)
-//	}
-func TNComments() string {
-	return "md_comments"
+func TNComments(bookid int) string {
+	return fmt.Sprintf("md_comments_%04d", bookid%2)
 }
+
+//func TNComments() string {
+//	return "md_comments"
+//}
 
 func TNScore() string {
 	return "md_score"
@@ -99,7 +100,7 @@ func IncOrDec(table string, field string, condition string, incre bool, step ...
 	// update md_book set vcnt=vcnt+1 where book_id=doc.BookId 图书阅读人次+1
 	// update md_book set vcnt=vcnt+1 where document_id=doc.DocumentId 章节阅读人次+1
 	sql := fmt.Sprintf("update %v set %v=%v%v%v where %v", table, field, field, mark, s, condition)
-	_, err = orm.NewOrm().Raw(sql).Exec()
+	_, err = GetOrm("w").Raw(sql).Exec()
 	return
 }
 

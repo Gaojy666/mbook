@@ -4,5 +4,8 @@ package sysinit
 // init()函数不能有参数，不能有返回值
 func init() {
 	sysinit()
-	dbinit()
+	dbinit("w") // 初始化主库
+	dbinit("r") // 初始化从库
+	dbinit("uar")
+	dbinit("uaw")
 }

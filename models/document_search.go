@@ -2,7 +2,6 @@ package models
 
 import (
 	"fmt"
-	"github.com/beego/beego/v2/client/orm"
 	"strconv"
 	"strings"
 	"time"
@@ -120,7 +119,7 @@ func (m *DocumentSearch) GetDocsById(id []int, withoutCont ...bool) (docs []Docu
 	var rows []DocumentData
 	var cnt int64
 
-	cnt, err = orm.NewOrm().Raw(sql).QueryRows(&rows)
+	cnt, err = GetOrm("r").Raw(sql).QueryRows(&rows)
 	if cnt > 0 {
 		docMap := make(map[int]DocumentData)
 		for _, row := range rows {

@@ -12,7 +12,7 @@ func init() {
 	// 通过get方法请求到controller中的Index方法里面
 	web.Router("/", &controllers.HomeController{}, "get:Index")
 	web.Router("/2", &controllers.HomeController{}, "get:Index2")
-	web.Router("/explore", &controllers.ExploreController{}, "get:Index")
+	web.Router("/explore/:cid", &controllers.ExploreController{}, "get:Index")
 	web.Router("/books/:key", &controllers.DocumentController{}, "get:Index")
 
 	// 读书模块
@@ -27,8 +27,8 @@ func init() {
 	web.Router("/api/:key/delete", &controllers.DocumentController{}, "post:Delete")     // 删除章节
 
 	// 搜索  ****** 随着用户量和数据越来越多，搜索会给服务器带来很大的压力
-	web.Router("/search", &controllers.SearchController{}, "get:Search")
-	web.Router("/search/result", &controllers.SearchController{}, "get:Result")
+	web.Router("/search", &controllers.ElasticsearchController{}, "get:Search")
+	web.Router("/search/result", &controllers.ElasticsearchController{}, "get:Result")
 
 	// login
 	// 与regist相比，login没有类似doregist的请求，其post请求在AccountController通过判断

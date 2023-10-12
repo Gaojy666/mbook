@@ -1,7 +1,6 @@
 package models
 
 import (
-	"github.com/beego/beego/v2/client/orm"
 	"strconv"
 )
 
@@ -17,7 +16,7 @@ func (m *BookCategory) TableName() string {
 
 // 根据书籍id查询分类id
 func (m *BookCategory) SelectByBookId(book_id int) (cates []Category, rows int64, err error) {
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	sql := "select c.* from " + TNCategory() + " c left join " + TNBookCategory() + " bc on c.id=bc.category_id where bc.book_id=?"
 	rows, err = o.Raw(sql, book_id).QueryRows(&cates)
 	return
@@ -35,7 +34,7 @@ func (m *BookCategory) SetBookCates(bookId int, cids []string) {
 		tableBookCategory = TNBookCategory()
 	)
 
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	o.QueryTable(tableCategory).Filter("id__in", cids).All(&cates, "id", "pid")
 
 	//创建了一个空的 cidMap，用于存储分类ID和其父分类ID的映射关系。

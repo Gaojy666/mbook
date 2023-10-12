@@ -64,7 +64,7 @@ func (m *Book) HomeData(pageIndex, pageSize int, cid int, fileds ...string) (boo
 	// 而后查询totalCount
 	sqlCount := fmt.Sprintf(sqlFmt, "count(*) cnt")
 
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	// 这里为什么要定义切片？
 	var params []orm.Params
 	if _, err := o.Raw(sqlCount).Values(&params); err == nil {
@@ -81,16 +81,17 @@ func (m *Book) HomeData(pageIndex, pageSize int, cid int, fileds ...string) (boo
 
 // Select 根据查询的字段和值来查询Book数据，后面可以指定查询的字段结果
 func (m *Book) Select(field string, value interface{}, cols ...string) (book *Book, err error) {
+	o := GetOrm("r")
 	if len(cols) == 0 {
-		err = orm.NewOrm().QueryTable(m.TableName()).Filter(field, value).One(m)
+		err = o.QueryTable(m.TableName()).Filter(field, value).One(m)
 	} else {
-		err = orm.NewOrm().QueryTable(m.TableName()).Filter(field, value).One(m, cols...)
+		err = o.QueryTable(m.TableName()).Filter(field, value).One(m, cols...)
 	}
 	return m, err
 }
 
 func (m *Book) SelectPage(pageIndex, pageSize, memberId int, PrivatelyOwned int) (books []*BookData, totalCount int, err error) {
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	sql1 := "select count(b.book_id) as total_count from " + TNBook() + " as b left join " +
 		TNRelationship() + " as r on b.book_id=r.book_id and r.member_id = ? where r.relationship_id > 0  and b.privately_owned=" + strconv.Itoa(PrivatelyOwned)
 
@@ -162,7 +163,7 @@ func (book *Book) ToBookData() (m *BookData) {
 
 // 更新章节数量
 func (m *Book) RefreshDocumentCount(bookId int) {
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	// 查询该书中的章节数
 	docCount, err := o.QueryTable(TNDocuments()).Filter("book_id", bookId).Count()
 	if err == nil {
@@ -185,7 +186,7 @@ func (m *Book) SearchBook(wd string, page, size int) (books []Book, cnt int, err
 	sqlCount := fmt.Sprintf(sqlFmt, "count(book_id) cnt")
 
 	wd = "%" + wd + "%"
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	var count struct{ Cnt int }
 	err = o.Raw(sqlCount, wd, wd).QueryRow(&count)
 	if count.Cnt > 0 {
@@ -207,7 +208,7 @@ func (m *Book) GetBooksByIds(ids []int, fields ...string) (books []Book, err err
 		idArr = append(idArr, i)
 	}
 
-	rows, err := orm.NewOrm().QueryTable(TNBook()).Filter("book_id__in", idArr).All(&bs, fields...)
+	rows, err := GetOrm("r").QueryTable(TNBook()).Filter("book_id__in", idArr).All(&bs, fields...)
 	if rows > 0 {
 		// 已经拿到了books数据切片,但是此时默认是根据id进行升序返回的结果
 		// 还是要根据上面SearchBook后id排序的结果来返回books切片结果,也就是根据ids的顺序来返回books数据
@@ -227,7 +228,7 @@ func (m *Book) GetBooksByIds(ids []int, fields ...string) (books []Book, err err
 
 // Insert
 func (m *Book) Insert() (err error) {
-	if _, err = orm.NewOrm().Insert(m); err != nil {
+	if _, err = GetOrm("w").Insert(m); err != nil {
 		return
 	}
 
@@ -249,7 +250,7 @@ func (m *Book) Insert() (err error) {
 func (m *Book) Update(cols ...string) (err error) {
 	bk := NewBook()
 	bk.BookId = m.BookId
-	o := orm.NewOrm()
+	o := GetOrm("w")
 	if err = o.Read(bk); err != nil {
 		return err
 	}

@@ -6,6 +6,7 @@ require github.com/beego/beego/v2 v2.1.0
 
 require (
 	github.com/PuerkitoBio/goquery v1.8.1
+	github.com/bitly/go-simplejson v0.5.1
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 	github.com/russross/blackfriday v1.6.0

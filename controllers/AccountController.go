@@ -194,7 +194,7 @@ func (c *AccountController) Logout() {
 //封装一个内部调用的函数，login
 // 判断数据库是否有相应的memberId
 func (c *AccountController) login(memberId int) (err error) {
-	//能否通过该memberId查询到相应用	户
+	//能否通过该memberId查询到相应用户
 	member, err := models.NewMember().Find(memberId)
 	if member.MemberId == 0 {
 		errors.New("用户不存在")

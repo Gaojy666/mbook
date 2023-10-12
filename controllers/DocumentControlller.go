@@ -255,7 +255,7 @@ func (c *DocumentController) Edit() {
 		} else { //字符串 or num <= 0
 			var doc = models.NewDocument()
 			// 查到符合指定identify和book_id的那条document的id
-			orm.NewOrm().QueryTable(doc).Filter("identify", id).Filter("book_id", bookData.BookId).One(doc, "document_id")
+			models.GetOrm("w").QueryTable(doc).Filter("identify", id).Filter("book_id", bookData.BookId).One(doc, "document_id")
 			docId = doc.DocumentId
 		}
 	}

@@ -22,12 +22,21 @@ func (c *ExploreController) Index() {
 		urlPrefix = web.URLFor("ExploreController.Index")
 	)
 
-	// GetInt用来获取URL中?后面携带的参数
-	if cid, _ := c.GetInt("cid"); cid > 0 {
-		// 取到分类号后，将对应的category的信息拿出来
-		cateModel := new(models.Category)
-		cate = cateModel.Find(cid)
-		c.Data["Cate"] = cate
+	//// GetInt用来获取URL中?后面携带的参数
+	//if cid, _ := c.GetInt("cid"); cid > 0 {
+	//	// 取到分类号后，将对应的category的信息拿出来
+	//	cateModel := new(models.Category)
+	//	cate = cateModel.Find(cid)
+	//	c.Data["Cate"] = cate
+	//}
+
+	cidstr := c.Ctx.Input.Param(":cid")
+	if len(cidstr) > 0 {
+		if cid, _ = strconv.Atoi(cidstr); cid > 0 {
+			cateModel := new(models.Category)
+			cate = cateModel.Find(cid)
+			c.Data["Cate"] = cate
+		}
 	}
 
 	c.Data["Cid"] = cid

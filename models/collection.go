@@ -2,8 +2,8 @@ package models
 
 import (
 	"fmt"
-	"github.com/beego/beego/v2/client/orm"
 	"strconv"
+	"strings"
 )
 
 type CollectionData struct {
@@ -40,7 +40,7 @@ func (m *Collection) TableName() string {
 // @return           cancel      是否是取消收藏
 func (m *Collection) Collection(uid, bid int) (cancel bool, err error) {
 	var star = Collection{MemberId: uid, BookId: bid}
-	o := orm.NewOrm()
+	o := GetOrm("uaw")
 	qs := o.QueryTable(TNCollection())
 	o.Read(&star, "MemberId", "BookId")
 	if star.Id > 0 { //取消收藏
@@ -63,7 +63,7 @@ func (m *Collection) DoesCollection(uid, bid interface{}) bool {
 	var star Collection
 	star.MemberId, _ = strconv.Atoi(fmt.Sprintf("%v", uid))
 	star.BookId, _ = strconv.Atoi(fmt.Sprintf("%v", bid))
-	orm.NewOrm().Read(&star, "MemberId", "BookId")
+	GetOrm("uar").Read(&star, "MemberId", "BookId")
 	if star.Id > 0 {
 		return true
 	}
@@ -72,12 +72,27 @@ func (m *Collection) DoesCollection(uid, bid interface{}) bool {
 
 // 获取收藏列表，查询图书信息
 func (m *Collection) List(mid, p, listRows int) (cnt int64, books []CollectionData, err error) {
-	o := orm.NewOrm()
+	o := GetOrm("uar")
 	filter := o.QueryTable(TNCollection()).Filter("member_id", mid)
 	if cnt, _ = filter.Count(); cnt > 0 {
-		sql := "select b.*,m.nickname from " + TNBook() + " b left join " + TNCollection() + " s on s.book_id=b.book_id left join " + TNMembers() + " m on m.member_id=b.member_id where s.member_id=? order by id desc limit %v offset %v"
+		////sql := "select b.*,m.nickname from " + TNBook() + " b left join " + TNCollection() + " s on s.book_id=b.book_id left join " + TNMembers() + " m on m.member_id=b.member_id where s.member_id=? order by id desc limit %v offset %v"
+		//sql = fmt.Sprintf(sql, listRows, (p-1)*listRows)
+		//_, err = GetOrm("r").Raw(sql, mid).QueryRows(&books)
+
+		sql := "select book_id from " + TNCollection() + "where member_id=? order by id desc limit %v offset %v"
 		sql = fmt.Sprintf(sql, listRows, (p-1)*listRows)
-		_, err = o.Raw(sql, mid).QueryRows(&books)
+		var stars []Collection
+		_, err = o.Raw(sql, mid).QueryRows(&stars)
+		if err == nil {
+			bids := []string{}
+			for _, v := range stars {
+				bids = append(bids, strconv.Itoa(v.BookId))
+			}
+			bidstr := strings.Join(bids, ",")
+
+			sql = "select b.* m.nickname from md_books b left join md_members m on m.member_id=b.member_id where b.book_id in (" + bidstr + ")"
+			_, err = GetOrm("r").Raw(sql).QueryRows(&books)
+		}
 	}
 	return
 }

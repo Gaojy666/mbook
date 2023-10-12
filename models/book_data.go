@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"github.com/beego/beego/v2/client/orm"
 	"time"
 	"ziyoubiancheng/mbook/common"
 )
@@ -52,7 +51,7 @@ func (m *BookData) SelectByIdentify(identify string, memberId int) (result *Book
 	}
 
 	book := NewBook()
-	o := orm.NewOrm()
+	o := GetOrm("r")
 	// 根据标识符查询书籍信息
 	err = o.QueryTable(TNBook()).Filter("identify", identify).One(book)
 	if err != nil {

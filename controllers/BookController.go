@@ -219,6 +219,7 @@ func (c *BookController) Release() {
 	//当前请求可以立即返回结果，而无需等待图书发布操作完成。
 	go func() {
 		models.NewDocument().ReleaseContent(bookId, c.BaseUrl())
+		models.ElasticBuildIndex(bookId)
 	}()
 
 	c.JsonResult(0, "已发布")
