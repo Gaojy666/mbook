@@ -13,21 +13,21 @@
             <div class="row">
                 <div class="col-xs-12">
                     <ul class="nav nav-tabs">
-                        <li {{if eq $.Tab "share"}}class="active"{{end}}><a href="{{urlfor "UserController.Index" ":username" .User.Account}}">分享</a></li>
-                        <li {{if eq $.Tab "collection"}}class="active"{{end}}><a href="{{urlfor "UserController.Collection" ":username" .User.Account}}">收藏</a></li>
-                        <li {{if eq $.Tab "follow"}}class="active"{{end}}><a href="{{urlfor "UserController.Follow" ":username" .User.Account}}">关注</a></li>
-                        <li {{if eq $.Tab "fans"}}class="active"{{end}}><a href="{{urlfor "UserController.Fans" ":username" .User.Account}}">粉丝</a></li>
+                        <li {{if eq $.Tab "share"}}class="active"{{end}}><a href="{{urlfor "CachedUserController.Index" ":username" .User.Account}}">分享</a></li>
+                        <li {{if eq $.Tab "collection"}}class="active"{{end}}><a href="{{urlfor "CachedUserController.Collection" ":username" .User.Account}}">收藏</a></li>
+                        <li {{if eq $.Tab "follow"}}class="active"{{end}}><a href="{{urlfor "CachedUserController.Follow" ":username" .User.Account}}">关注</a></li>
+                        <li {{if eq $.Tab "fans"}}class="active"{{end}}><a href="{{urlfor "CachedUserController.Fans" ":username" .User.Account}}">粉丝</a></li>
                     </ul>
                 </div>
                 <div class="col-xs-12 nopadding">
                     <div class="ucenter-content">
                         {{range .Fans}}
                         <div class="col-xs-4 col-sm-2 col-md-2 text-center fans-item">
-                            <a target="_blank" title="{{.Nickname}}" href="{{urlfor "UserController.Index" ":username" .Account}}" class="tooltips">
+                            <a target="_blank" title="{{.Nickname}}" href="{{urlfor "CachedUserController.Index" ":username" .Account}}" class="tooltips">
                                 <img class="thumbnail img-circle " src="{{showImg .Avatar "avatar"}}" alt="">
                             </a>
                             <div>
-                                <a target="_blank" title="{{.Nickname}}" href="{{urlfor "UserController.Index" ":username" .Account}}"  class="fans-username tooltips">{{.Nickname}}</a>
+                                <a target="_blank" title="{{.Nickname}}" href="{{urlfor "CachedUserController.Index" ":username" .Account}}"  class="fans-username tooltips">{{.Nickname}}</a>
                             </div>
                             <div>
                                 {{if eq $.Member.MemberId .MemberId}}

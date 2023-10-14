@@ -30,8 +30,10 @@ func InitCache() {
 	}
 
 	paramMap = make(map[string][]string)
+	// 分类页面缓存
 	pagecacheMap, _ := web.AppConfig.GetSection("pagecache_param")
 	for k, v := range pagecacheMap {
+		// key: ExploreController_Index, v: :cid:bid:kid ...
 		sv := strings.Split(v, ";")
 		paramMap[k] = sv
 	}
@@ -102,7 +104,7 @@ func cacheKey(controllerName, actionName string, paramArray ...map[string]string
 		if len(paramArray) > 0 {
 			for _, v := range paramMap[rtnstr] {
 				// v = :cid
-				// HomeController_index_cid_1
+				// ExploreController_index_cid_1
 				rtnstr = rtnstr + "_" + strings.ReplaceAll(v, ":", "") + "_" + paramArray[0][v]
 				//fmt.Println(paramArray[0][v])
 			}

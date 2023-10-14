@@ -17,6 +17,7 @@ import (
 	"time"
 	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/models"
+	"ziyoubiancheng/mbook/utils/dynamicache"
 	"ziyoubiancheng/mbook/utils/store"
 )
 
@@ -57,13 +58,42 @@ func (c *DocumentController) Index() {
 	}
 	c.Data["Tab"] = tab
 	// 2. 获取该书的目录
-	c.Data["Menu"], _ = new(models.Document).GetMenuTop(bookResult.BookId)
+	//c.Data["Menu"], _ = new(models.Document).GetMenuTop(bookResult.BookId)
 
 	// 3. 获取其他用户对该书的评论内容，包括评分，用户昵称，评论内容，头像，评论时间
 	// 当前默认展示30条评论
-	c.Data["Comments"], _ = new(models.Comments).BookComments(1, 30, bookResult.BookId)
+	//c.Data["Comments"], _ = new(models.Comments).BookComments(1, 30, bookResult.BookId)
 	// 用户自己对该书的评分
 	c.Data["MyScore"] = new(models.Score).BookScoreByUid(c.Member.MemberId, bookResult.BookId)
+
+	// 动态缓存逻辑
+
+	// 创建独一的key
+	cachekeyDocidx := "dynamicache_document_index_cdata:" + identify
+
+	// 动态缓存c.Data["Menu"]
+	cachekeyDocidxMenu := cachekeyDocidx + "_menu"
+	var dataMenu []*models.Document
+	// （1）先尝试取读缓存，如果读到直接返回
+	err := dynamicache.ReadStruct(cachekeyDocidxMenu, &dataMenu)
+	if err != nil {
+		// （2）没有读到，再查询数据库
+		dataMenu, _ = new(models.Document).GetMenuTop(bookResult.BookId)
+		// (3) 并写缓存
+		dynamicache.WriteStruct(cachekeyDocidxMenu, dataMenu)
+	}
+	c.Data["Menu"] = dataMenu
+
+	cachekeyDocidxComments := cachekeyDocidx + "_comments"
+	var dataComments []models.BookCommentsResult
+	err = dynamicache.ReadStruct(cachekeyDocidxComments, &dataComments)
+	if err != nil {
+		dataComments, _ = new(models.Comments).BookComments(1, 30, bookResult.BookId)
+		dynamicache.WriteStruct(cachekeyDocidxComments, dataComments)
+		logs.Error(err.Error())
+	}
+
+	c.Data["Comments"] = dataComments
 }
 
 // 阅读器页面

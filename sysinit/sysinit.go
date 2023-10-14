@@ -6,6 +6,7 @@ import (
 	"strings"
 	"ziyoubiancheng/mbook/models"
 	"ziyoubiancheng/mbook/utils"
+	"ziyoubiancheng/mbook/utils/dynamicache"
 	"ziyoubiancheng/mbook/utils/pagecache"
 )
 
@@ -21,10 +22,22 @@ func sysinit() {
 
 	// 初始化pagecache
 	initPageCache()
+
+	// 初始化动态缓存
+	initDynamicache()
+}
+
+// 初始化动态缓存连接池
+func initDynamicache() {
+	dynamicache.MaxIdle = 128
+	dynamicache.MaxOpen = 128
+	dynamicache.ExpireSec = 10
+	dynamicache.InitCache()
 }
 
 func initPageCache() {
 	pagecache.BasePath = "./cache/staticpage"
+	// 设置过期时间为10s
 	pagecache.ExpireSec = 10
 	pagecache.InitCache()
 }

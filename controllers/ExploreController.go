@@ -30,10 +30,14 @@ func (c *ExploreController) Index() {
 	//	c.Data["Cate"] = cate
 	//}
 
+	// 伪静态化
+	// 只是为了页面路径看起来像静态文件
+	// localhost:8880/explore?cid=1 => localhost:8880/explore/1
 	cidstr := c.Ctx.Input.Param(":cid")
 	if len(cidstr) > 0 {
 		if cid, _ = strconv.Atoi(cidstr); cid > 0 {
 			cateModel := new(models.Category)
+			// 本质上还是数据库查询
 			cate = cateModel.Find(cid)
 			c.Data["Cate"] = cate
 		}

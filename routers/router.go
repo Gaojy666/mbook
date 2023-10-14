@@ -51,13 +51,17 @@ func init() {
 	web.Router("/book/setting/token", &controllers.BookController{}, "post:CreateToken")  //创建Token
 
 	// 个人中心,社交模块  ******
-	web.Router("/user/:username", &controllers.UserController{}, "get:Index")                 // 分享
-	web.Router("/user/:username/collection", &controllers.UserController{}, "get:Collection") // 收藏
-	web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow")         // 关注
-	web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans")             // 粉丝
-	web.Router("/follow/:uid", &controllers.BaseController{}, "get:SetFollow")                // 关注或取消关注
-	web.Router("/book/score/:id", &controllers.BookController{}, "*:Score")                   // 评分
-	web.Router("/book/comment/:id", &controllers.BookController{}, "post:Comment")            // 评论
+	web.Router("/user/:username", &controllers.CachedUserController{}, "get:Index")                 //分享
+	web.Router("/user/:username/collection", &controllers.CachedUserController{}, "get:Collection") //收藏
+	web.Router("/user/:username/follow", &controllers.CachedUserController{}, "get:Follow")         //关注
+	web.Router("/user/:username/fans", &controllers.CachedUserController{}, "get:Fans")             //粉丝
+	//web.Router("/user/:username", &controllers.UserController{}, "get:Index")                 // 分享
+	//web.Router("/user/:username/collection", &controllers.UserController{}, "get:Collection") // 收藏
+	//web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow")         // 关注
+	//web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans") // 粉丝
+	web.Router("/follow/:uid", &controllers.BaseController{}, "get:SetFollow")     // 关注或取消关注
+	web.Router("/book/score/:id", &controllers.BookController{}, "*:Score")        // 评分
+	web.Router("/book/comment/:id", &controllers.BookController{}, "post:Comment") // 评论
 
 	// 个人设置
 	// /setting中，如果是get请求，展示一个setting页面；如果是post请求，会把建好的信息给入库

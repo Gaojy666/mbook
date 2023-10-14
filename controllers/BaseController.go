@@ -11,6 +11,7 @@ import (
 	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/models"
 	"ziyoubiancheng/mbook/utils"
+	"ziyoubiancheng/mbook/utils/pagecache"
 )
 
 type BaseController struct {
@@ -27,29 +28,31 @@ type CookieRemember struct {
 }
 
 func (c *BaseController) Finish() {
-	//controllerName, actionName := c.GetControllerAndAction()
-	//if pagecache.NeedWrite(controllerName, actionName, c.Ctx.Input.Params()) {
-	//	render, err := c.RenderString()
-	//	//fmt.Println(render)
-	//	if len(render) > 0 && err == nil {
-	//		err = pagecache.Write(controllerName, actionName, &render, c.Ctx.Input.Params())
-	//	}
-	//}
+	controllerName, actionName := c.GetControllerAndAction()
+	if pagecache.NeedWrite(controllerName, actionName, c.Ctx.Input.Params()) {
+		// 拿出模板渲染后的字符串
+		render, err := c.RenderString()
+		//fmt.Println(render)
+		if len(render) > 0 && err == nil {
+			// write render to file 写到对应的缓存文件中去
+			err = pagecache.Write(controllerName, actionName, &render, c.Ctx.Input.Params())
+		}
+	}
 }
 
 // 每个子类Controller公用方法调用前，都执行一下Prepare方法
 func (c *BaseController) Prepare() {
-	// 如果有缓存，则返回缓存内容
-	//controllerName, actionName := c.GetControllerAndAction()
-	//if pagecache.IncacheList(controllerName, actionName) {
-	//	contentPtr, err := pagecache.Read(controllerName, actionName, c.Ctx.Input.Params())
-	//	if err == nil && len(*contentPtr) > 0 {
-	//		// 给用户返回缓存的内容
-	//		io.WriteString(c.Ctx.ResponseWriter, *contentPtr)
-	//		logs.Debug(controllerName + "-" + actionName + "read Cache")
-	//		c.StopRun()
-	//	}
-	//}
+	//如果有缓存，则返回缓存内容
+	controllerName, actionName := c.GetControllerAndAction()
+	if pagecache.IncacheList(controllerName, actionName) {
+		contentPtr, err := pagecache.Read(controllerName, actionName, c.Ctx.Input.Params())
+		if err == nil && len(*contentPtr) > 0 {
+			// 给用户返回缓存的内容, 下面的查询数据库操作就不执行了
+			io.WriteString(c.Ctx.ResponseWriter, *contentPtr)
+			logs.Debug(controllerName + "-" + actionName + "read Cache")
+			c.StopRun()
+		}
+	}
 
 	c.Member = models.NewMember() // 初始化
 	c.EnableAnonymous = false

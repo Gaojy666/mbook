@@ -55,7 +55,8 @@ func (m *Comments) AddComments(uid, bookId int, content string) (err error) {
 	}
 	// 3.增加评论数（评论数+1）
 	sql = `update ` + TNBook() + ` set cnt_comment=cnt_comment+1 where book_id=?`
-	o.Raw(sql, bookId)
+
+	GetOrm("w").Raw(sql, bookId).Exec()
 
 	return
 }

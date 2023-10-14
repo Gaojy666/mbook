@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"github.com/beego/beego/v2/adapter/toolbox"
 	"github.com/beego/beego/v2/server/web"
 	_ "ziyoubiancheng/mbook/routers"
@@ -16,7 +15,7 @@ func main() {
 	web.BConfig.WebConfig.Session.SessionOn = true
 
 	task := toolbox.NewTask("clear_expired_cache", "*/2 * * * * *", func() error {
-		fmt.Println("------delete cache------")
+		//fmt.Println("------delete cache------")
 		pagecache.ClearExpiredFiles()
 		return nil
 	})
