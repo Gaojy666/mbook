@@ -1,6 +1,7 @@
 package sysinit
 
 import (
+	"fmt"
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/server/web"
 	_ "github.com/go-sql-driver/mysql"
@@ -24,12 +25,16 @@ func dbinit(aliases ...string) {
 				// 注册了一个名为 "default" 的 MySQL 数据库连接
 				// false 表示只在表不存在时创建，isDev 表示在开发模式下，输出详细的同步操作日志。
 				orm.RunSyncdb("default", false, isDev)
+			} else if alias == "r" {
+				fmt.Println("-----------")
+				fmt.Println(alias)
+				orm.RunSyncdb("r", false, isDev)
 			}
 		}
 	} else {
 		// 无参初始化主库的情况
 		RegisterDatabase("w")
-		// 自动建表
+		// 自动	建表
 		orm.RunSyncdb("default", false, isDev)
 	}
 

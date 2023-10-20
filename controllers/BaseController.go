@@ -2,10 +2,14 @@ package controllers
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/session"
+	_ "github.com/beego/beego/v2/server/web/session/redis"
 	"io"
+	"log"
 	"strings"
 	"time"
 	"ziyoubiancheng/mbook/common"
@@ -25,6 +29,37 @@ type CookieRemember struct {
 	MemberId int
 	Account  string
 	Time     time.Time
+}
+
+var globalSessions *session.Manager
+
+func init() {
+	web.BConfig.WebConfig.Session.SessionOn, _ = web.AppConfig.Bool("sessionon")
+	web.BConfig.WebConfig.Session.SessionProvider = "redis"
+	web.BConfig.WebConfig.Session.SessionProviderConfig = "127.0.0.1:6379"
+
+	sessionCfg, _ := web.AppConfig.String("sessionproviderconfig")
+	if len(sessionCfg) == 0 {
+		return
+	}
+	// 1.创建一个session配置
+	sessionConfig := &session.ManagerConfig{
+		CookieName:      "gosessionid",
+		EnableSetCookie: true,
+		Gclifetime:      3600,
+		Maxlifetime:     3600,
+		Secure:          false,
+		CookieLifeTime:  3600,
+		ProviderConfig:  sessionCfg,
+	}
+	// 2.创建全局的session管理对象
+	var err error
+	globalSessions, err = session.NewManager("redis", sessionConfig)
+	if err != nil {
+		log.Printf(err.Error())
+	}
+	// 3.开启协程，负责session垃圾回收
+	go globalSessions.GC()
 }
 
 func (c *BaseController) Finish() {
@@ -56,8 +91,33 @@ func (c *BaseController) Prepare() {
 
 	c.Member = models.NewMember() // 初始化
 	c.EnableAnonymous = false
-	// 从session中获取用户信息
-	if member, ok := c.GetSession(common.SessionName).(models.Member); ok && member.MemberId > 0 {
+
+	// 从redis的session中获取用户信息
+	// 将session放入redis是为了配置nginx后多服务器的session同步问题
+
+	if globalSessions == nil {
+		c.Abort("500")
+	}
+	//根据当前请求返回 session 对象
+	session, err := globalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+	if err != nil {
+		logs.Debug(err.Error())
+	}
+	defer session.SessionRelease(context.Background(), c.Ctx.ResponseWriter) //释放session中的资源，保存数据
+
+	// 判断当前member是否在session中
+	memberInSession := false
+	var member models.Member
+	memberobj := session.Get(context.Background(), common.SessionName)
+	if memberobj != nil {
+		member = memberobj.(models.Member)
+		if member.MemberId > 0 {
+			memberInSession = true
+		}
+	}
+
+	//if member, ok := c.GetSession(common.SessionName).(models.Member); ok && member.MemberId > 0 {
+	if memberInSession {
 		c.Member = &member
 	} else {
 		// 如果Session中没有检测到
@@ -89,15 +149,25 @@ func (c *BaseController) Prepare() {
 
 // 设置登录用户信息
 func (c *BaseController) SetMember(member models.Member) {
+	//if member.MemberId <= 0 {
+	//	// 删除会话数据
+	//	c.DelSession(common.SessionName)
+	//	c.DelSession("uid")
+	//	c.DestroySession()
+	//} else {
+	//	// 如果用户信息存在，将其写入到session中
+	//	// 默认session以文件的形式
+	//	c.SetSession(common.SessionName, member)
+	//	c.SetSession("uid", member.MemberId)
+	//}
+	session, _ := globalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+	defer session.SessionRelease(context.Background(), c.Ctx.ResponseWriter)
 	if member.MemberId <= 0 {
-		// 删除会话数据
-		c.DelSession(common.SessionName)
-		c.DelSession("uid")
-		c.DestroySession()
+		session.Delete(context.Background(), common.SessionName)
+		session.Delete(context.Background(), "uid")
 	} else {
-		// 如果用户信息存在
-		c.SetSession(common.SessionName, member)
-		c.SetSession("uid", member.MemberId)
+		session.Set(context.Background(), common.SessionName, member)
+		session.Set(context.Background(), "uid", member.MemberId)
 	}
 }
 

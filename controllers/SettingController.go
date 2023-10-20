@@ -37,7 +37,7 @@ func (c *SettingController) Index() {
 		c.JsonResult(0, "ok")
 	}
 	c.Data["SettingBasic"] = true
-	c.TplName = "setting/index.html"
+	c.TplName = "	setting/index.html"
 }
 
 // 上传头像

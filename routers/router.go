@@ -6,6 +6,7 @@ import (
 )
 
 func init() {
+
 	//web.Router("/", &controllers.MainController{})
 
 	// 首页&分类 *********，一般开发中遇到的就是首页的并发压力比较大
