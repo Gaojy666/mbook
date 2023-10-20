@@ -1,4 +1,8 @@
 ## Go读书社区
+是基于[BookStack](https://github.com/TruthHun/BookStack)进行重构和开发的。这两个项目最终来源于[MinDoc](https://github.com/lifei6671/mindoc)。
+在开发的过程中，根据需求做了功能裁减，然后进行了大量架构重构和性能优化，对其中很大一部分代码的逻辑实现部分进行了改写，同时也对部分表结构进行了调整。
+
+[课程地址](https://coding.imooc.com/class/403.html)
 
 运行环境：
 Go 1.20.3
