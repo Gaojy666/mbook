@@ -31,6 +31,9 @@ func init() {
 	web.Router("/search", &controllers.ElasticsearchController{}, "get:Search")
 	web.Router("/search/result", &controllers.ElasticsearchController{}, "get:Result")
 
+	//web.Router("/search", &controllers.SearchController{}, "get:Search")
+	//web.Router("/search/result", &controllers.SearchController{}, "get:Result")
+
 	// login
 	// 与regist相比，login没有类似doregist的请求，其post请求在AccountController通过判断
 	// 如果是post请求，就执行登录过程；如果是get请求，就展示get页面
@@ -56,10 +59,10 @@ func init() {
 	web.Router("/user/:username/collection", &controllers.CachedUserController{}, "get:Collection") //收藏
 	web.Router("/user/:username/follow", &controllers.CachedUserController{}, "get:Follow")         //关注
 	web.Router("/user/:username/fans", &controllers.CachedUserController{}, "get:Fans")             //粉丝
-	//web.Router("/user/:username", &controllers.UserController{}, "get:Index")                 // 分享
+	//web.Router("/user/:username", &controllers.UserController{}, "get:Index")                       // 分享
 	//web.Router("/user/:username/collection", &controllers.UserController{}, "get:Collection") // 收藏
-	//web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow")         // 关注
-	//web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans") // 粉丝
+	//web.Router("/user/:username/follow", &controllers.UserController{}, "get:Follow") // 关注
+	//web.Router("/user/:username/fans", &controllers.UserController{}, "get:Fans")  // 粉丝
 	web.Router("/follow/:uid", &controllers.BaseController{}, "get:SetFollow")     // 关注或取消关注
 	web.Router("/book/score/:id", &controllers.BookController{}, "*:Score")        // 评分
 	web.Router("/book/comment/:id", &controllers.BookController{}, "post:Comment") // 评论

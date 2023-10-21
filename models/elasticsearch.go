@@ -49,7 +49,7 @@ func ElasticSearchBook(kw string, pageSize, page int) ([]int, int, error) {
 		{
 			"query": {
 				"multi_match": {
-					"query": %v,
+					"query": "%v",
 					"fields": ["book_name", "description"]
 				}
 			},
@@ -61,13 +61,13 @@ func ElasticSearchBook(kw string, pageSize, page int) ([]int, int, error) {
 
 	// elasticsearch api
 	host, _ := web.AppConfig.String("elastic_host")
-	api := host + "mbooks/datas/_search"
+	api := host + "mbooks/_search"
 	queryJson = fmt.Sprintf(queryJson, kw, pageSize, page)
 
 	// 返回simpleJson对象，使用起来更方便
 	sj, err := utils.HttpPostJson(api, queryJson)
 	if err == nil {
-		count = sj.GetPath("hits", "total").MustInt()
+		count = sj.GetPath("hits", "total", "value").MustInt()
 		resultArray := sj.GetPath("hits", "hits").MustArray()
 		for _, v := range resultArray {
 			if each_map, ok := v.(map[string]interface{}); ok {
@@ -96,12 +96,12 @@ func ElasticSearchDocument(kw string, pageSize, page int, bookId ...int) ([]int,
 		{
 			"query":{
 				"match": {
-					"release": "ajax",
+					"release": "%s"
 				}
 			},
 			"_source":["document_id"],
-			"size": %v,
-			"from": %v
+			"size": %d,
+			"from": %d
 		}
 	`
 	queryJson = fmt.Sprintf(queryJson, kw, pageSize, page)
@@ -125,18 +125,17 @@ func ElasticSearchDocument(kw string, pageSize, page int, bookId ...int) ([]int,
 						}
 					}
 				},
-				"from": %v,
-				"size": %v,
+				"from": %d,
+				"size": %d,
 				"_source": ["document_id"]
 			}
 		`
-		queryJson = fmt.Sprintf(queryJson, kw, pageSize, page)
+		queryJson = fmt.Sprintf(queryJson, bookId, kw, pageSize, page)
 	}
 
 	//elasticsearch api
 	host, _ := web.AppConfig.String("elastic_host")
-	api := host + "mdocuments/datas/_search"
-	queryJson = fmt.Sprintf(queryJson, kw, pageSize, page)
+	api := host + "mdocuments/_search"
 
 	fmt.Println(api)
 	fmt.Println(queryJson)
@@ -144,7 +143,7 @@ func ElasticSearchDocument(kw string, pageSize, page int, bookId ...int) ([]int,
 	sj, err := utils.HttpPostJson(api, queryJson)
 
 	if err == nil {
-		count = sj.GetPath("hits", "total").MustInt()
+		count = sj.GetPath("hits", "total", "value").MustInt()
 		resultArray := sj.GetPath("hits", "hits").MustArray()
 		for _, v := range resultArray {
 			if each_map, ok := v.(map[string]interface{}); ok {
@@ -158,7 +157,7 @@ func ElasticSearchDocument(kw string, pageSize, page int, bookId ...int) ([]int,
 }
 
 func addBookToIndex(bookId int, bookName string, description string) {
-	// mbooks/datas/[bookid]
+	// mbooks/_doc/[bookid]
 	queryJson := `
 		{
 			"book_id":%v,
@@ -168,7 +167,7 @@ func addBookToIndex(bookId int, bookName string, description string) {
 	`
 	// elasticsearch api
 	host, _ := web.AppConfig.String("elastic_host")
-	api := host + "mbooks/datas/" + strconv.Itoa(bookId)
+	api := host + "mbooks/_doc/" + strconv.Itoa(bookId)
 
 	// 发起请求
 	queryJson = fmt.Sprintf(queryJson, bookId, bookName, description)
@@ -189,7 +188,7 @@ func addDocumentToIndex(documentId, bookId int, release string) {
 
 	//elasticsearch api
 	host, _ := web.AppConfig.String("elastic_host")
-	api := host + "mdocuments/datas/" + strconv.Itoa(documentId)
+	api := host + "mdocuments/_doc/" + strconv.Itoa(documentId)
 
 	// 发起请求
 	queryJson = fmt.Sprintf(queryJson, documentId, bookId, release)

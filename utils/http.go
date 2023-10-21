@@ -30,13 +30,13 @@ func HttpPutJson(url, body string) error {
 func HttpPostJson(url, body string) (*simplejson.Json, error) {
 	response, err := httplib.Post(url).
 		Header("Content-Type", "application/json").
-		SetTimeout(10*time.Second, 10*time.Second).Response()
+		SetTimeout(10*time.Second, 10*time.Second).Body(body).Response()
 	var sj *simplejson.Json
 	if err == nil {
 		defer response.Body.Close()
 		if response.StatusCode >= 300 || response.StatusCode < 200 {
 			body, _ := io.ReadAll(response.Body)
-			err = errors.New(response.Status + ";" + string(body))
+			err = errors.New(response.Status + "; " + string(body))
 		} else {
 			// 接收的response是正常的
 			bodyBytes, _ := io.ReadAll(response.Body)

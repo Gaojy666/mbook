@@ -9,7 +9,11 @@ Go 1.20.3
 
 beego v2.1.0
 
-ElasticSearch 7.17.4
+ElasticSearch 8.5.3
+
+MySQL 8.0.30
+
+Redis 5.0.14
 
 ### v0.0 用户模块
 cookie-session机制
@@ -94,7 +98,16 @@ cookie-session机制
 ### v2.0 解决了nginx多机部署Session的同步问题
 
 
-注：ElasticSearch版本后期还需进行适配
+### v3.0 实现了ElasticSearch快速搜索
+原课程是ES7.5.0版本，本项目更新到8版本，主要区别在type上。
+
+按文档搜索：
+
+![](./res/6.png)
+
+按图书搜索：
+
+![](./res/7.png)
 
 
 ### 项目结构

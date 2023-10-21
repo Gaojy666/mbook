@@ -61,6 +61,6 @@ func (c *ElasticsearchController) Result() {
 	}
 
 	c.Data["SpendTime"] = fmt.Sprintf("%.3f", time.Since(now).Seconds())
-	c.TplName = "search/search.html"
+	c.TplName = "search/result.html"
 
 }
