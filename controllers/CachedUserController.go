@@ -98,7 +98,6 @@ func (c *CachedUserController) Collection() {
 	c.Data["Total"] = totalCount
 	c.Data["Tab"] = "collection"
 	c.TplName = "user/collection.html"
-
 }
 
 func (c *CachedUserController) Follow() {

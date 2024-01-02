@@ -25,6 +25,7 @@ func sysinit() {
 
 	// 初始化动态缓存
 	initDynamicache()
+
 }
 
 // 初始化动态缓存连接池

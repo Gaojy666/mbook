@@ -216,11 +216,26 @@ func (c *BookController) Release() {
 
 	// 开了一个协程, 后台进行发布图书的操作
 	// 可以实现图书发布的异步处理，提高系统的并发能力和响应速度
-	//当前请求可以立即返回结果，而无需等待图书发布操作完成。
-	go func() {
-		models.NewDocument().ReleaseContent(bookId, c.BaseUrl())
-		models.ElasticBuildIndex(bookId)
-	}()
+	// 当前请求可以立即返回结果，而无需等待图书发布操作完成。
+	//go func() {
+	//	models.NewDocument().ReleaseContent(bookId, c.BaseUrl())
+	//	models.ElasticBuildIndex(bookId)
+	//}()
+
+	// 创建消息体
+	msg := models.NewMessage(bookId, c.BaseUrl())
+	// 类型转换
+	byteMessage, err := json.Marshal(msg)
+	if err != nil {
+		logs.Error(err)
+	}
+
+	err = Rabbitmq.PublishSimple(string(byteMessage))
+	if err != nil {
+		logs.Error(err)
+	}
+	err = Rabbitmq.ConsumeSimple()
+	defer Rabbitmq.Destroy()
 
 	c.JsonResult(0, "已发布")
 }

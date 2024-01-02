@@ -39,7 +39,7 @@ func InitCache() {
 	}
 }
 
-// 判断controller和action是否在缓存list中，从而判断是否要都缓存
+// 判断controller和action是否在缓存list中，从而判断是否要读缓存
 func IncacheList(controllerName, actionName string) bool {
 	keyname := cacheKey(controllerName, actionName)
 	if f := cacheMap[keyname]; f {
@@ -57,7 +57,7 @@ func NeedWrite(controllerName, actionName string, params map[string]string) bool
 		getCache, _ := store.Get(context.Background(), keyName)
 
 		tmpCache, ok := getCache.(string)
-		// 如果tmpCache字符串为空，说明超时
+		// 如果tmpCache字符串为空，说明超时，需要重写
 		if !ok && len(tmpCache) == 0 {
 			logs.Debug("need write :" + keyName)
 			return true

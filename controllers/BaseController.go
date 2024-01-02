@@ -15,6 +15,7 @@ import (
 	"ziyoubiancheng/mbook/common"
 	"ziyoubiancheng/mbook/models"
 	"ziyoubiancheng/mbook/utils"
+	"ziyoubiancheng/mbook/utils/RabbitMQ"
 	"ziyoubiancheng/mbook/utils/pagecache"
 )
 
@@ -23,6 +24,7 @@ type BaseController struct {
 	Member          *models.Member    // 用户
 	Option          map[string]string // 全局设置
 	EnableAnonymous bool              // 开启匿名访问
+	Rabbitmq        *RabbitMQ.RabbitMQ
 }
 
 type CookieRemember struct {
@@ -32,8 +34,10 @@ type CookieRemember struct {
 }
 
 var globalSessions *session.Manager
+var Rabbitmq *RabbitMQ.RabbitMQ
 
 func init() {
+
 	web.BConfig.WebConfig.Session.SessionOn, _ = web.AppConfig.Bool("sessionon")
 	web.BConfig.WebConfig.Session.SessionProvider = "redis"
 	web.BConfig.WebConfig.Session.SessionProviderConfig = "127.0.0.1:6379"
@@ -58,7 +62,7 @@ func init() {
 	if err != nil {
 		log.Printf(err.Error())
 	}
-	// 3.开启协程，负责session垃圾回收
+	// 3.开启协程，负责session垃圾回收,定时1小时清理过期的session数据
 	go globalSessions.GC()
 }
 
@@ -77,10 +81,14 @@ func (c *BaseController) Finish() {
 
 // 每个子类Controller公用方法调用前，都执行一下Prepare方法
 func (c *BaseController) Prepare() {
+	// 定义全局rabbitmq对象
+	Rabbitmq = RabbitMQ.NewRabbitMQSimple("imoocProduct")
+
 	//如果有缓存，则返回缓存内容
 	controllerName, actionName := c.GetControllerAndAction()
 	if pagecache.IncacheList(controllerName, actionName) {
 		contentPtr, err := pagecache.Read(controllerName, actionName, c.Ctx.Input.Params())
+		// 返回的不是空字符串，说明没有过期
 		if err == nil && len(*contentPtr) > 0 {
 			// 给用户返回缓存的内容, 下面的查询数据库操作就不执行了
 			io.WriteString(c.Ctx.ResponseWriter, *contentPtr)

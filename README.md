@@ -110,6 +110,9 @@ cookie-session机制
 ![](./res/7.png)
 
 
+### v3.1 通过RabbitMQ实现发布文档书籍业务的解耦
+
+
 ### 项目结构
 
 ```

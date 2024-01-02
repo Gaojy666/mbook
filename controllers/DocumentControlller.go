@@ -73,7 +73,7 @@ func (c *DocumentController) Index() {
 
 	// 动态缓存c.Data["Menu"]
 	cachekeyDocidxMenu := cachekeyDocidx + "_menu"
-	var dataMenu []*models.Document
+	var dataMenu []models.Document
 	// （1）先尝试取读缓存，如果读到直接返回
 	err := dynamicache.ReadStruct(cachekeyDocidxMenu, &dataMenu)
 	if err != nil {
